@@ -1,3 +1,6 @@
-# virtual enviroment
+# Ignora virtual enviroment y archivos de entorno
+
 .venv/
+.env
+.flaskenv
 
