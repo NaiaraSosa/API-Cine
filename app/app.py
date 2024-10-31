@@ -12,6 +12,7 @@ app = Flask(__name__)
 # Configuración de SQLAlchemy para conectar con PostgreSQL
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key')
 
 # Inicializa la base
 db.init_app(app)
