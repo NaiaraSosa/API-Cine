@@ -18,4 +18,4 @@ class Usuario(db.Model):
         self.contraseña = generate_password_hash(contraseña)
 
     def check_password(self, contraseña):
-        return check_password_hash(contraseña)
+        return check_password_hash(self.contraseña, contraseña)
