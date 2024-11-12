@@ -14,6 +14,9 @@ class Usuario(db.Model):
     id_rol = db.Column(db.Integer, db.ForeignKey('rol.id'), nullable=False)
     fecha_registro = db.Column(db.Date, default=datetime.utcnow)
 
+    # relaciones
+    reseñas = db.relationship("Reseña", backref="usuario", lazy=True)
+
     def set_password(self, contraseña):
         if len(contraseña) < 6 or len(contraseña) > 8:
             raise ValueError("La contraseña debe tener entre 6 y 8 caracteres.")
