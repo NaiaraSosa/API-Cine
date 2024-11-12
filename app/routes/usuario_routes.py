@@ -1,32 +1,12 @@
-import os
-from flask import Flask, request, jsonify, session
-from dotenv import load_dotenv
+from flask import Flask, request, jsonify, session, Blueprint
 from app.connection import db
-from .models.usuario import Usuario
-from .models.rol import Rol
+from app.models.usuario import Usuario
+from app.models.rol import Rol
 
-load_dotenv()
-
-app = Flask(__name__)
-
-# Configuración de SQLAlchemy para conectar con PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.getenv('SECRET_KEY', 'fallback_secret_key')
-
-# Inicializa la base
-db.init_app(app)
-
-# Crea las tablas si no existen
-with app.app_context():
-    db.create_all()
-
-@app.get("/")
-def home():
-    return "Hello World"
+usuario_bp = Blueprint('usuario_bp', __name__)
 
 # Ruta para registrar un nuevo usuario
-@app.route('/registrarse', methods=['POST'])
+@usuario_bp.route('/registrarse', methods=['POST'])
 def registrarse():
     data = request.get_json()
     nombre = data.get('nombre')
@@ -56,8 +36,10 @@ def registrarse():
 
     return jsonify({"message": "Usuario registrado exitosamente"}), 201
 
+
+
 # Ruta para el login
-@app.route('/login', methods=['POST'])
+@usuario_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     correo = data.get('correo_electronico')
@@ -75,15 +57,11 @@ def login():
     return jsonify({"error": "Credenciales inválidas"}), 401
 
 # Ruta para hacer logout
-@app.route('/logout', methods=['POST'])
+@usuario_bp.route('/logout', methods=['POST'])
 def logout():
     session.pop('id_usuario', None)
     return jsonify({"message": "Logout exitoso"}), 200
 
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=4000)
 
-
-
-
+# Ruta 

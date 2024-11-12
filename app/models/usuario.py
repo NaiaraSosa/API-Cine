@@ -2,7 +2,6 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from app.connection import db
 
-
 class Usuario(db.Model):
     __tablename__ = 'usuario'
     id = db.Column(db.Integer, primary_key=True)
@@ -13,9 +12,6 @@ class Usuario(db.Model):
     contraseña = db.Column(db.String(120), nullable=False)
     id_rol = db.Column(db.Integer, db.ForeignKey('rol.id'), nullable=False)
     fecha_registro = db.Column(db.Date, default=datetime.utcnow)
-
-    # relaciones
-    reseñas = db.relationship("Reseña", backref="usuario", lazy=True)
 
     def set_password(self, contraseña):
         if len(contraseña) < 6 or len(contraseña) > 8:

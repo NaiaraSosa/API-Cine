@@ -6,4 +6,4 @@ class Clasificacion(db.Model):
     codigo = db.Column(db.String(50), nullable=False)
 
     # relaciones
-    peliculas = db.relationship("Pelicula", backref="clasificacion", lazy=True)
+    #peliculas = db.relationship("Pelicula", backref="clasificacion", lazy=True)
