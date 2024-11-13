@@ -5,7 +5,6 @@ from app.models.rol import Rol
 
 usuario_bp = Blueprint('usuario_bp', __name__)
 
-# Ruta para registrar un nuevo usuario
 @usuario_bp.route('/registrarse', methods=['POST'])
 def registrarse():
     data = request.get_json()
@@ -19,11 +18,13 @@ def registrarse():
     if not (nombre and apellido and correo and fecha_nac and contraseña and id_rol):
         return jsonify({"error": "Todos los campos son requeridos"}), 400
 
-    # Verifica si el usuario ya existe
     if Usuario.query.filter((Usuario.correo_electronico == correo)).first():
         return jsonify({"error": "El usuario ya existe"}), 409
 
-    # Crea un nuevo usuario
+    rol = Rol.query.get(id_rol)
+    if not rol:
+        return jsonify({"error": "Rol no válido"}), 400
+
     nuevo_usuario = Usuario(
         nombre=nombre, 
         apellido=apellido, 
@@ -31,14 +32,18 @@ def registrarse():
         fecha_nacimiento=fecha_nac,
         id_rol=id_rol)
     nuevo_usuario.set_password(contraseña)
-    db.session.add(nuevo_usuario)
-    db.session.commit()
+    
+    try:
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al registrar el usuario: {str(e)}"}), 500
 
     return jsonify({"message": "Usuario registrado exitosamente"}), 201
 
 
 
-# Ruta para el login
 @usuario_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -48,15 +53,17 @@ def login():
     if not (correo and contraseña):
         return jsonify({"error": "Usuario y contraseña requeridos"}), 400
 
-    # Busca el usuario en la base de datos
     usuario = Usuario.query.filter_by(correo_electronico=correo).first()
     if usuario and usuario.check_password(contraseña):
         session['id_usuario'] = usuario.id
+        session.permanent = True
         return jsonify({"message": "Login exitoso"}), 200
 
     return jsonify({"error": "Credenciales inválidas"}), 401
 
-# Ruta para hacer logout
+
+
+# Ruta para hacer logout NO PROBADA
 @usuario_bp.route('/logout', methods=['POST'])
 def logout():
     session.pop('id_usuario', None)
@@ -64,4 +71,59 @@ def logout():
 
 
 
-# Ruta 
+# Ruta NO PROBADA
+@usuario_bp.route('/editar_ususario', methods=['PUT'])
+def editar_usuario():
+    data = request.get_json()
+    correo = data.get('correo_electronico')
+
+    if not correo:
+        return jsonify({"error": "El correo del usuario es requerido"}), 400
+
+    usuario = Usuario.query.filter_by(correo_electronico=correo).first()
+    if not usuario:
+        return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
+    
+    nombre = data.get('nombre', usuario.nombre)
+    apellido = data.get('apellido', usuario.apellido)
+    correo = data.get('correo_electronico', usuario.correo_electronico)
+    fecha_nac = data.get('fecha_nacimiento', usuario.fecha_nacimiento)
+    contraseña = data.get('contraseña', usuario.contraseña)
+    id_rol = data.get('id_rol', usuario.id_rol)
+
+    rol = Rol.query.get(id_rol)
+    if not rol:
+        return jsonify({"error": "Rol no válido"}), 400
+
+    usuario.nombre = nombre
+    usuario.apellido = apellido
+    usuario.correo = correo
+    usuario.fecha_nac = fecha_nac
+    usuario.contraseña = contraseña
+    usuario.id_rol = id_rol
+
+    db.session.commit()
+
+    return jsonify({"message": "Usuario modificado exitosamente"}), 200
+
+
+
+# Ruta NO PROBADA
+@usuario_bp.route('/eliminar_usuario', methods=['DELETE'])
+def eliminar_usuario():
+    data = request.get_json()
+    correo = data.get('correo_electronico')
+
+    if not correo:
+        return jsonify({"error": "El correo del usuario es requerido"}), 400
+
+    usuario = Usuario.query.filter_by(correo_electronico=correo).first()
+    if not usuario:
+        return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
+
+    db.session.delete(usuario)
+    db.session.commit()
+
+    return jsonify({"message": "Película eliminada exitosamente"}), 200
+
+

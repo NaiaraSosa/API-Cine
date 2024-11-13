@@ -1,0 +1,95 @@
+from flask import Flask, request, jsonify, session, Blueprint
+from app.connection import db
+from app.models.pelicula import Pelicula
+from app.models.clasificacion import Clasificacion
+
+pelicula_bp = Blueprint('peliculas_bp', __name__)
+
+@pelicula_bp.route('/agregar_pelicula', methods=['POST'])
+def agregar_pelicula():
+    data = request.get_json()
+    titulo = data.get('titulo')
+    director = data.get('director')
+    duracion = data.get('duracion')
+    id_clasificacion = data.get('id_clasificacion')
+    sinopsis = data.get('sinopsis')
+
+    if not (titulo and director and duracion and id_clasificacion and sinopsis):
+        return jsonify({"error": "Todos los campos son requeridos"}), 400
+
+    if Pelicula.query.filter((Pelicula.titulo == titulo)).first():
+        return jsonify({"error": "La película ya se encuentra en el catálogo."}), 409
+    
+    clasificacion = Clasificacion.query.get(id_clasificacion)
+    if not clasificacion:
+        return jsonify({"error": "Clasificación no válida"}), 400
+
+    nueva_pelicula = Pelicula(
+        titulo = titulo,
+        director = director,
+        duracion = duracion,
+        id_clasificacion = id_clasificacion,
+        sinopsis = sinopsis
+    )
+
+    try:
+        db.session.add(nueva_pelicula)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al agregar la película: {str(e)}"}), 500
+
+    return jsonify({"message": "Película agregada exitosamente"}), 201
+
+
+
+@pelicula_bp.route('/editar_pelicula', methods=['PUT'])
+def editar_pelicula():
+    data = request.get_json()
+    titulo = data.get('titulo')
+
+    if not titulo:
+        return jsonify({"error": "El nombre de la película es requerido"}), 400
+
+    pelicula = Pelicula.query.filter_by(titulo=titulo).first()
+    if not pelicula:
+        return jsonify({'error': 'La película no se encuentra en el catálogo'}), 404
+
+    titulo = data.get('titulo', pelicula.titulo)
+    director = data.get('director', pelicula.director)
+    duracion = data.get('duracion', pelicula.duracion)
+    id_clasificacion = data.get('id_clasificacion', pelicula.id_clasificacion)
+    sinopsis = data.get('sinopsis', pelicula.sinopsis)
+
+    clasificacion = Clasificacion.query.get(id_clasificacion)
+    if not clasificacion:
+        return jsonify({"error": "Clasificación no válida"}), 400
+
+    pelicula.titulo = titulo
+    pelicula.director = director
+    pelicula.duracion = duracion
+    pelicula.id_clasificacion = id_clasificacion
+    pelicula.sinopsis = sinopsis
+
+    db.session.commit()
+
+    return jsonify({"message": "Película modificada exitosamente"}), 200
+
+
+
+@pelicula_bp.route('/eliminar_pelicula', methods=['DELETE'])
+def eliminar_pelicula():
+    data = request.get_json()
+    titulo = data.get('titulo')
+
+    if not titulo:
+        return jsonify({"error": "El nombre de la película es requerido"}), 400
+
+    pelicula = Pelicula.query.filter_by(titulo=titulo).first()
+    if not pelicula:
+        return jsonify({'error': 'La película no se encuentra en el catálogo'}), 404
+
+    db.session.delete(pelicula)
+    db.session.commit()
+
+    return jsonify({"message": "Película eliminada exitosamente"}), 200
