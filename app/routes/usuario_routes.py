@@ -1,8 +1,11 @@
-from flask import Flask, request, jsonify, session, Blueprint
+from flask import request, jsonify, session, Blueprint
 from psycopg2 import IntegrityError
 from app.connection import db
 from app.models.usuario import Usuario
 from app.models.rol import Rol
+import jwt
+from datetime import datetime, timedelta
+from app.config import Config
 
 usuario_bp = Blueprint('usuario_bp', __name__)
 
@@ -45,6 +48,49 @@ def crear_usuario():
 
 
 
+def generate_token(username, id_rol):
+    expiration = datetime.utcnow() + timedelta(minutes=30)
+    token = jwt.encode({
+        'username': username,
+        'id_rol': id_rol,
+        'exp': expiration
+    }, Config.SECRET_KEY, algorithm='HS256')
+    return token
+
+def token_required(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Falta el token!'}), 401
+        try:
+            jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'El token ha expirado'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 403
+        return f(*args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
+
+
+def token_required_admin(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Falta el token!'}), 401
+        try:
+            data = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+            id_rol = data['id_rol']
+            if id_rol != 1:
+                return jsonify({'message': 'Usuario no autorizado.'}), 403
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'El token ha expirado'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 403
+        return f(*args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
+
 @usuario_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -56,11 +102,10 @@ def login():
 
     usuario = Usuario.query.filter_by(correo_electronico=correo).first()
     if usuario and usuario.check_password(contraseña):
-        session['id_usuario'] = usuario.id
-        session.permanent = True
-        return jsonify({"message": "Login exitoso"}), 200
-
-    return jsonify({"error": "Credenciales inválidas"}), 401
+        token = generate_token(correo, usuario.id_rol)
+        return jsonify({"token": token}), 200
+    else: 
+        return jsonify({"error": "Credenciales inválidas"}), 401
 
 
 
@@ -72,7 +117,6 @@ def logout():
 
 
 
-# Ruta NO PROBADA
 @usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
 def obtener_usuario(id):
     usuario = Usuario.query.get(id)  

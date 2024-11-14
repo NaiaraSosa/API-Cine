@@ -2,11 +2,13 @@ from flask import Flask, request, jsonify, session, Blueprint
 from app.connection import db
 from app.models.pelicula import Pelicula
 from app.models.clasificacion import Clasificacion
+from app.routes.usuario_routes import token_required, token_required_admin
 
-pelicula_bp = Blueprint('peliculas_bp', __name__)
+pelicula_bp = Blueprint('pelicula_bp', __name__)
 
 
 @pelicula_bp.route('/peliculas', methods=['POST'])
+@token_required_admin
 def agregar_pelicula():
     data = request.get_json()
     titulo = data.get('titulo')
@@ -43,8 +45,8 @@ def agregar_pelicula():
     return jsonify({"message": "Película agregada exitosamente"}), 201
 
 
-# Ruta NO PROBADA
 @pelicula_bp.route('/peliculas/<int:id>', methods=['GET'])
+@token_required
 def obtener_usuario(id):
     pelicula = Pelicula.query.get(id)  
     if not pelicula:
@@ -64,6 +66,7 @@ def obtener_usuario(id):
 
 
 @pelicula_bp.route('/peliculas/<int:id>', methods=['PUT'])
+@token_required_admin
 def editar_pelicula():
     data = request.get_json()
 
@@ -95,6 +98,7 @@ def editar_pelicula():
 
 
 @pelicula_bp.route('/peliculas/<int:id>', methods=['DELETE'])
+@token_required_admin
 def eliminar_pelicula():
     pelicula = Pelicula.query.get(id)
     if not pelicula:
