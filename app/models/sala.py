@@ -8,4 +8,4 @@ class Sala(db.Model):
 
 
     # relaciones
-    funciones = db.relationship("Funcion", backref="sala", lazy=True)
+    #funciones = db.relationship("Funcion", backref="sala", lazy=True)
