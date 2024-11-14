@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify, session, Blueprint
+from psycopg2 import IntegrityError
 from app.connection import db
 from app.models.usuario import Usuario
 from app.models.rol import Rol
 
 usuario_bp = Blueprint('usuario_bp', __name__)
 
-@usuario_bp.route('/registrarse', methods=['POST'])
-def registrarse():
+@usuario_bp.route('/usuarios', methods=['POST'])
+def crear_usuario():
     data = request.get_json()
     nombre = data.get('nombre')
     apellido = data.get('apellido')
@@ -17,9 +18,6 @@ def registrarse():
 
     if not (nombre and apellido and correo and fecha_nac and contraseña and id_rol):
         return jsonify({"error": "Todos los campos son requeridos"}), 400
-
-    if Usuario.query.filter((Usuario.correo_electronico == correo)).first():
-        return jsonify({"error": "El usuario ya existe"}), 409
 
     rol = Rol.query.get(id_rol)
     if not rol:
@@ -36,6 +34,9 @@ def registrarse():
     try:
         db.session.add(nuevo_usuario)
         db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "El correo electrónico ya está registrado"}), 409
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al registrar el usuario: {str(e)}"}), 500
@@ -47,7 +48,7 @@ def registrarse():
 @usuario_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    correo = data.get('correo_electronico')
+    correo = data.get('correo_electronico', '').strip()
     contraseña = data.get('contraseña')
 
     if not (correo and contraseña):
@@ -72,15 +73,32 @@ def logout():
 
 
 # Ruta NO PROBADA
-@usuario_bp.route('/editar_ususario', methods=['PUT'])
+@usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
+def obtener_usuario(id):
+    usuario = Usuario.query.get(id)  
+    if not usuario:
+        return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
+
+    usuario_data = {
+        'id': usuario.id,
+        'nombre': usuario.nombre,
+        'apellido': usuario.apellido,
+        'correo_electronico': usuario.correo_electronico,
+        'fecha_nacimiento': usuario.fecha_nacimiento,
+        'id_rol': usuario.id_rol
+    }
+
+    return jsonify(usuario_data), 200
+
+
+
+
+# Ruta NO PROBADA
+@usuario_bp.route('/usuarios/<int:id>', methods=['PUT'])
 def editar_usuario():
     data = request.get_json()
-    correo = data.get('correo_electronico')
 
-    if not correo:
-        return jsonify({"error": "El correo del usuario es requerido"}), 400
-
-    usuario = Usuario.query.filter_by(correo_electronico=correo).first()
+    usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
     
@@ -91,9 +109,10 @@ def editar_usuario():
     contraseña = data.get('contraseña', usuario.contraseña)
     id_rol = data.get('id_rol', usuario.id_rol)
 
-    rol = Rol.query.get(id_rol)
-    if not rol:
-        return jsonify({"error": "Rol no válido"}), 400
+    if id_rol != usuario.id_rol:
+        rol = Rol.query.get(id_rol)
+        if not rol:
+            return jsonify({"error": "Rol no válido"}), 400
 
     usuario.nombre = nombre
     usuario.apellido = apellido
@@ -102,6 +121,10 @@ def editar_usuario():
     usuario.contraseña = contraseña
     usuario.id_rol = id_rol
 
+    nueva_contraseña = data.get('contraseña')
+    if nueva_contraseña:
+        usuario.set_password(nueva_contraseña)
+
     db.session.commit()
 
     return jsonify({"message": "Usuario modificado exitosamente"}), 200
@@ -109,15 +132,9 @@ def editar_usuario():
 
 
 # Ruta NO PROBADA
-@usuario_bp.route('/eliminar_usuario', methods=['DELETE'])
+@usuario_bp.route('/ususarios/<int:id>', methods=['DELETE'])
 def eliminar_usuario():
-    data = request.get_json()
-    correo = data.get('correo_electronico')
-
-    if not correo:
-        return jsonify({"error": "El correo del usuario es requerido"}), 400
-
-    usuario = Usuario.query.filter_by(correo_electronico=correo).first()
+    usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
 
