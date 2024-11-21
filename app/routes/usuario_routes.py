@@ -1,12 +1,16 @@
-from flask import Flask, request, jsonify, session, Blueprint
+from flask import request, jsonify, session, Blueprint
+from psycopg2 import IntegrityError
 from app.connection import db
 from app.models.usuario import Usuario
 from app.models.rol import Rol
+import jwt
+from datetime import datetime, timedelta
+from app.config import Config
 
 usuario_bp = Blueprint('usuario_bp', __name__)
 
-@usuario_bp.route('/registrarse', methods=['POST'])
-def registrarse():
+@usuario_bp.route('/usuarios', methods=['POST'])
+def crear_usuario():
     data = request.get_json()
     nombre = data.get('nombre')
     apellido = data.get('apellido')
@@ -17,9 +21,6 @@ def registrarse():
 
     if not (nombre and apellido and correo and fecha_nac and contraseña and id_rol):
         return jsonify({"error": "Todos los campos son requeridos"}), 400
-
-    if Usuario.query.filter((Usuario.correo_electronico == correo)).first():
-        return jsonify({"error": "El usuario ya existe"}), 409
 
     rol = Rol.query.get(id_rol)
     if not rol:
@@ -36,6 +37,9 @@ def registrarse():
     try:
         db.session.add(nuevo_usuario)
         db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "El correo electrónico ya está registrado"}), 409
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al registrar el usuario: {str(e)}"}), 500
@@ -44,10 +48,53 @@ def registrarse():
 
 
 
+def generate_token(username, id_rol):
+    expiration = datetime.utcnow() + timedelta(minutes=30)
+    token = jwt.encode({
+        'username': username,
+        'id_rol': id_rol,
+        'exp': expiration
+    }, Config.SECRET_KEY, algorithm='HS256')
+    return token
+
+def token_required(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Falta el token!'}), 401
+        try:
+            jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'El token ha expirado'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 403
+        return f(*args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
+
+
+def token_required_admin(f):
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({'message': 'Falta el token!'}), 401
+        try:
+            data = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+            id_rol = data['id_rol']
+            if id_rol != 1:
+                return jsonify({'message': 'Usuario no autorizado.'}), 403
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'El token ha expirado'}), 403
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token inválido'}), 403
+        return f(*args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
+
 @usuario_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    correo = data.get('correo_electronico')
+    correo = data.get('correo_electronico', '').strip()
     contraseña = data.get('contraseña')
 
     if not (correo and contraseña):
@@ -55,11 +102,10 @@ def login():
 
     usuario = Usuario.query.filter_by(correo_electronico=correo).first()
     if usuario and usuario.check_password(contraseña):
-        session['id_usuario'] = usuario.id
-        session.permanent = True
-        return jsonify({"message": "Login exitoso"}), 200
-
-    return jsonify({"error": "Credenciales inválidas"}), 401
+        token = generate_token(correo, usuario.id_rol)
+        return jsonify({"token": token}), 200
+    else: 
+        return jsonify({"error": "Credenciales inválidas"}), 401
 
 
 
@@ -71,16 +117,32 @@ def logout():
 
 
 
+@usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
+def obtener_usuario(id):
+    usuario = Usuario.query.get(id)  
+    if not usuario:
+        return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
+
+    usuario_data = {
+        'id': usuario.id,
+        'nombre': usuario.nombre,
+        'apellido': usuario.apellido,
+        'correo_electronico': usuario.correo_electronico,
+        'fecha_nacimiento': usuario.fecha_nacimiento,
+        'id_rol': usuario.id_rol
+    }
+
+    return jsonify(usuario_data), 200
+
+
+
+
 # Ruta NO PROBADA
-@usuario_bp.route('/editar_ususario', methods=['PUT'])
+@usuario_bp.route('/usuarios/<int:id>', methods=['PUT'])
 def editar_usuario():
     data = request.get_json()
-    correo = data.get('correo_electronico')
 
-    if not correo:
-        return jsonify({"error": "El correo del usuario es requerido"}), 400
-
-    usuario = Usuario.query.filter_by(correo_electronico=correo).first()
+    usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
     
@@ -91,9 +153,10 @@ def editar_usuario():
     contraseña = data.get('contraseña', usuario.contraseña)
     id_rol = data.get('id_rol', usuario.id_rol)
 
-    rol = Rol.query.get(id_rol)
-    if not rol:
-        return jsonify({"error": "Rol no válido"}), 400
+    if id_rol != usuario.id_rol:
+        rol = Rol.query.get(id_rol)
+        if not rol:
+            return jsonify({"error": "Rol no válido"}), 400
 
     usuario.nombre = nombre
     usuario.apellido = apellido
@@ -102,6 +165,10 @@ def editar_usuario():
     usuario.contraseña = contraseña
     usuario.id_rol = id_rol
 
+    nueva_contraseña = data.get('contraseña')
+    if nueva_contraseña:
+        usuario.set_password(nueva_contraseña)
+
     db.session.commit()
 
     return jsonify({"message": "Usuario modificado exitosamente"}), 200
@@ -109,15 +176,9 @@ def editar_usuario():
 
 
 # Ruta NO PROBADA
-@usuario_bp.route('/eliminar_usuario', methods=['DELETE'])
+@usuario_bp.route('/ususarios/<int:id>', methods=['DELETE'])
 def eliminar_usuario():
-    data = request.get_json()
-    correo = data.get('correo_electronico')
-
-    if not correo:
-        return jsonify({"error": "El correo del usuario es requerido"}), 400
-
-    usuario = Usuario.query.filter_by(correo_electronico=correo).first()
+    usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
 
