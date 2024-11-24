@@ -67,7 +67,7 @@ def obtener_usuario(id):
 
 @pelicula_bp.route('/peliculas/<int:id>', methods=['PUT'])
 @token_required_admin
-def editar_pelicula():
+def editar_pelicula(id):
     data = request.get_json()
 
     pelicula = Pelicula.query.get(id)
@@ -99,7 +99,7 @@ def editar_pelicula():
 
 @pelicula_bp.route('/peliculas/<int:id>', methods=['DELETE'])
 @token_required_admin
-def eliminar_pelicula():
+def eliminar_pelicula(id):
     pelicula = Pelicula.query.get(id)
     if not pelicula:
         return jsonify({'error': 'La película no se encuentra en el catálogo'}), 404

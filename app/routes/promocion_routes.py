@@ -2,20 +2,38 @@ from flask import Blueprint, request, jsonify
 from app.connection import db
 from app.models.promocion import Promocion
 from datetime import datetime
+from app.routes.usuario_routes import token_required, token_required_admin
 
 promocion_bp = Blueprint('promocion_bp', __name__)
 
-@promocion_bp.route('/agregar_promocion', methods=['POST'])
+'''obtener promocion'''
+@promocion_bp.route('/promociones/<int:id>', methods=['GET'])
+@token_required_admin  
+def obtener_promocion(id):
+    promocion = Promocion.query.get(id)  
+    if not promocion:
+        return jsonify({'error': 'La promoción no se encuentra en el catálogo'}), 404
+
+    promocion_data = {
+        'id': promocion.id,
+        'descripcion': promocion.descripcion,
+        'fecha_inicio': promocion.fecha_inicio.isoformat(),
+        'fecha_fin': promocion.fecha_fin.isoformat()
+    }
+
+    return jsonify(promocion_data), 200
+
+# Agregar promoción
+@promocion_bp.route('/promociones', methods=['POST'])
+@token_required_admin  # Protege este endpoint si es necesario
 def agregar_promocion():
     data = request.get_json()
     descripcion = data.get('descripcion')
     fecha_inicio = data.get('fecha_inicio')
     fecha_fin = data.get('fecha_fin')
 
-    
     if not (descripcion and fecha_inicio and fecha_fin):
         return jsonify({"error": "La descripción, fecha de inicio y fecha de fin son requeridos"}), 400
-
 
     try:
         fecha_inicio = datetime.fromisoformat(fecha_inicio)
@@ -23,10 +41,8 @@ def agregar_promocion():
     except ValueError:
         return jsonify({"error": "Formato de fecha inválido"}), 400
 
-    
     if fecha_fin <= fecha_inicio:
         return jsonify({"error": "La fecha de fin debe ser después de la fecha de inicio"}), 400
-
 
     nueva_promocion = Promocion(
         descripcion=descripcion,
@@ -43,15 +59,12 @@ def agregar_promocion():
 
     return jsonify({"message": "Promoción agregada exitosamente"}), 201
 
-@promocion_bp.route('/eliminar_promocion', methods=['DELETE'])
-def eliminar_promocion():
-    data = request.get_json()
-    id_promocion = data.get('id')
+'''Eliminar promocion'''
+@promocion_bp.route('/promociones/<int:id>', methods=['DELETE'])
+@token_required_admin  # Protege este endpoint si es necesario
+def eliminar_promocion(id):
+    promocion = Promocion.query.get(id)
 
-    if not id_promocion:
-        return jsonify({"error": "El ID de la promoción es requerido"}), 400
-
-    promocion = Promocion.query.get(id_promocion)
     if not promocion:
         return jsonify({'error': 'La promoción no se encuentra en el catálogo'}), 404
 
@@ -61,21 +74,18 @@ def eliminar_promocion():
         return jsonify({"message": "Promoción eliminada exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Error al eliminar la promoción: {str(e)}"}), 500    
+        return jsonify({"error": f"Error al eliminar la promoción: {str(e)}"}), 500
 
-@promocion_bp.route('/editar_promocion', methods=['PUT'])
-def editar_promocion():
-    data = request.get_json()
-    id_promocion = data.get('id')
+'''editar promocion'''
+@promocion_bp.route('/promociones/<int:id>', methods=['PUT'])
+@token_required_admin  # Protege este endpoint si es necesario
+def editar_promocion(id):
+    promocion = Promocion.query.get(id)
 
-    if not id_promocion:
-        return jsonify({"error": "El ID de la promoción es requerido"}), 400
-
-
-    promocion = Promocion.query.get(id_promocion)
     if not promocion:
         return jsonify({'error': 'La promoción no se encuentra en el catálogo'}), 404
 
+    data = request.get_json()
 
     descripcion = data.get('descripcion', promocion.descripcion)
     fecha_inicio = data.get('fecha_inicio', promocion.fecha_inicio.isoformat() if promocion.fecha_inicio else None)
