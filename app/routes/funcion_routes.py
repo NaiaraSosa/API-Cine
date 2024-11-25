@@ -164,3 +164,24 @@ def editar_funcion(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al modificar la función: {str(e)}"}), 500
+    
+@funcion_bp.route('/funciones', methods=['GET'])
+@token_required
+def obtener_funciones():
+
+    funciones = Funcion.query.all()
+    if not funciones:
+        return jsonify({"message": "No hay funciones disponibles"}), 200
+
+    funciones_data = []
+    for funcion in funciones:
+        funciones_data.append({
+            'id': funcion.id,
+            'id_pelicula': funcion.id_pelicula,
+            'id_sala': funcion.id_sala,
+            'horario_inicio': funcion.horario_inicio.isoformat() if funcion.horario_inicio else None,
+            'horario_fin': funcion.horario_fin.isoformat() if funcion.horario_fin else None,
+            'asientos_disponibles': funcion.asientos_disponibles
+        })
+
+    return jsonify(funciones_data), 200

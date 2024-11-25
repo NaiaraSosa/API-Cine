@@ -108,3 +108,25 @@ def eliminar_pelicula(id):
     db.session.commit()
 
     return jsonify({"message": "Película eliminada exitosamente"}), 200
+
+@pelicula_bp.route('/peliculas', methods=['GET'])
+@token_required
+def obtener_peliculas():
+
+    peliculas = Pelicula.query.all()
+
+    if not peliculas:
+        return jsonify({"message": "No hay películas disponibles"}), 200
+
+    peliculas_data = []
+    for pelicula in peliculas:
+        peliculas_data.append({
+        'id': pelicula.id,
+        'titulo': pelicula.titulo,
+        'director': pelicula.director,
+        'duracion': pelicula.duracion,
+        'id_clasificacion': pelicula.id_clasificacion,
+        'sinopsis': pelicula.sinopsis
+        })
+
+    return jsonify(peliculas_data), 200

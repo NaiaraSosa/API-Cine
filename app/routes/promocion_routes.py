@@ -110,3 +110,21 @@ def editar_promocion(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al modificar la promoción: {str(e)}"}), 500
+    
+@promocion_bp.route('/promociones', methods=['GET'])
+@token_required_admin  
+def obtener_promociones():
+    promociones = Promocion.query.all()
+    if not promociones:
+        return jsonify({"message": "No hay promociones disponibles"}), 200
+
+    promociones_data = []
+    for promocion in promociones:
+        promociones_data.append({
+            'id': promocion.id,
+            'descripcion': promocion.descripcion,
+            'fecha_inicio': promocion.fecha_inicio.isoformat(),
+            'fecha_fin': promocion.fecha_fin.isoformat()
+        })
+
+    return jsonify(promociones_data), 200

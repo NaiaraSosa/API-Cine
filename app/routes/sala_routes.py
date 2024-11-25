@@ -90,3 +90,18 @@ def editar_sala(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al modificar la sala: {str(e)}"}), 500
+@sala_bp.route('/salas', methods=['GET'])
+@token_required  
+def obtener_salas():
+    salas = Sala.query.all()
+    if not salas:
+        return jsonify({"message": "No hay salas disponibles"}), 200
+    salas_data = []
+    for sala in salas:
+        salas_data.append({
+            'id': sala.id,
+            'nombre': sala.nombre,
+            'capacidad': sala.capacidad,
+        })
+
+    return jsonify(salas_data), 200
