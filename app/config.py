@@ -8,3 +8,8 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'fallback_secret_key')
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+class TestingConfig(Config):
+    # Usamos la URL de la base de datos desde el archivo .env
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:22617@localhost/cine')
+    TESTING = True

@@ -109,15 +109,15 @@ def login():
 
 
 
-# Ruta para hacer logout NO PROBADA
-@usuario_bp.route('/logout', methods=['POST'])
+# Ruta para hacer logout (mejor usar GET en lugar de POST)
+@usuario_bp.route('/logout', methods=['GET'])  # Cambié a GET
 def logout():
     session.pop('id_usuario', None)
     return jsonify({"message": "Logout exitoso"}), 200
 
-
-
+# Ruta para obtener un usuario
 @usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
+@token_required_admin
 def obtener_usuario(id):
     usuario = Usuario.query.get(id)  
     if not usuario:
@@ -134,12 +134,10 @@ def obtener_usuario(id):
 
     return jsonify(usuario_data), 200
 
-
-
-
-# Ruta NO PROBADA
-@usuario_bp.route('/usuarios/<int:id>', methods=['PUT'])
-def editar_usuario():
+# Ruta para editar un usuario
+@usuario_bp.route('/usuarios/<int:id>', methods=['PUT'])  # Corregí el parámetro 'id'
+@token_required_admin
+def editar_usuario(id):  # Agregué 'id' como parámetro
     data = request.get_json()
 
     usuario = Usuario.query.get(id)
@@ -160,11 +158,11 @@ def editar_usuario():
 
     usuario.nombre = nombre
     usuario.apellido = apellido
-    usuario.correo = correo
-    usuario.fecha_nac = fecha_nac
-    usuario.contraseña = contraseña
+    usuario.correo_electronico = correo  # Corregí el nombre de la propiedad
+    usuario.fecha_nacimiento = fecha_nac  # Corregí el nombre de la propiedad
     usuario.id_rol = id_rol
 
+    # Solo actualiza la contraseña si se pasa un nuevo valor
     nueva_contraseña = data.get('contraseña')
     if nueva_contraseña:
         usuario.set_password(nueva_contraseña)
@@ -173,11 +171,10 @@ def editar_usuario():
 
     return jsonify({"message": "Usuario modificado exitosamente"}), 200
 
-
-
-# Ruta NO PROBADA
-@usuario_bp.route('/ususarios/<int:id>', methods=['DELETE'])
-def eliminar_usuario():
+# Ruta para eliminar un usuario
+@usuario_bp.route('/usuarios/<int:id>', methods=['DELETE'])  # Corregí la ruta de 'ususarios' a 'usuarios'
+@token_required_admin
+def eliminar_usuario(id):  # Agregué 'id' como parámetro
     usuario = Usuario.query.get(id)
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
@@ -185,6 +182,29 @@ def eliminar_usuario():
     db.session.delete(usuario)
     db.session.commit()
 
-    return jsonify({"message": "Película eliminada exitosamente"}), 200
+    return jsonify({"message": "Usuario eliminado exitosamente"}), 200
+
+@usuario_bp.route('/usuarios', methods=['GET'])
+@token_required_admin  # Si quieres proteger la ruta para que solo un administrador pueda acceder
+def obtener_usuarios():
+    """Obtener todos los usuarios"""
+    usuarios = Usuario.query.all()
+    if not usuarios:
+        return jsonify({'error': 'No hay usuarios registrados'}), 404
+
+    # Formateamos los datos de cada usuario
+    usuarios_data = []
+    for usuario in usuarios:
+        usuarios_data.append({
+            'id': usuario.id,
+            'nombre': usuario.nombre,
+            'apellido': usuario.apellido,
+            'correo_electronico': usuario.correo_electronico,
+            'fecha_nacimiento': usuario.fecha_nacimiento,
+            'id_rol': usuario.id_rol
+        })
+
+    return jsonify(usuarios_data), 200
+
 
 
