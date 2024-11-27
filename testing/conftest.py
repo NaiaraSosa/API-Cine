@@ -1,6 +1,7 @@
 import pytest
 from app import create_app
 from app.connection import db
+from datetime import datetime, timedelta
 from sqlalchemy.sql import text
 from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Configuracion
 
@@ -240,6 +241,38 @@ def reseñas(client, token, peliculas, usuario):
 
     return [reseña1, reseña2]
 
+''' Fixture para crear funciones '''
+@pytest.fixture
+def funciones(client, token, peliculas, salas):
+    pelicula1, pelicula2 = peliculas
+    sala1, sala2 = salas
+
+    funcion1 = Funcion(
+        id_pelicula=pelicula1.id,
+        id_sala=sala1.id,
+        horario_inicio=datetime(2024, 12, 1, 18, 0),
+        horario_fin=datetime(2024, 12, 1, 20, 0),
+        asientos_disponibles=sala1.capacidad,
+        asientos_totales=sala1.capacidad
+    )
+
+    funcion2 = Funcion(
+        id_pelicula=pelicula2.id,
+        id_sala=sala2.id,
+        horario_inicio=datetime(2024, 12, 2, 15, 0),
+        horario_fin=datetime(2024, 12, 2, 17, 0),
+        asientos_disponibles=sala2.capacidad,
+        asientos_totales=sala2.capacidad
+    )
+
+    db.session.add(funcion1)
+    db.session.add(funcion2)
+    db.session.commit()
+
+    assert funcion1.id is not None
+    assert funcion2.id is not None
+
+    return [funcion1, funcion2]
 
 
 
