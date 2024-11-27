@@ -6,7 +6,6 @@ import os
 
 '''Inicialización de la API'''
 def create_app(config_name = None):  # Agregamos el parámetro config_name
-def create_app(config_name=None):
     app = Flask(__name__)
 
     # Determina el nombre de la configuración según el entorno
