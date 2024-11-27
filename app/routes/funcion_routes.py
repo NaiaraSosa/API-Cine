@@ -58,6 +58,34 @@ def obtener_funciones(id_usuario):
 
 
 
+'''Obtener todas las funciones de una película'''
+@funcion_bp.route('/funciones/pelicula/<int:id>', methods=['GET'])
+@token_required 
+def obtener_reseñas_pelicula(id, id_usuario):
+    pelicula = Pelicula.query.get(id)
+    if not pelicula:
+        return jsonify({"error": "La película no existe"}), 404
+    
+    funciones = Funcion.query.filter_by(id_pelicula=id).all()
+    if not funciones:
+        return jsonify({'message': 'No hay funciones para esta película'}), 200
+
+    funciones_data = []
+    for funcion in funciones:
+        funciones_data.append({
+            'id': funcion.id,
+            'id_pelicula': funcion.id_pelicula,
+            'id_sala': funcion.id_sala,
+            'horario_inicio': funcion.horario_inicio,
+            'horario_fin': funcion.horario_fin,
+            'asientos_disponibles': funcion.asientos_disponibles,
+            'asientos_totales': funcion.asientos_totales
+        })
+
+    return jsonify({"funciones": funciones_data}), 200
+
+
+
 ''' Agregar una función '''
 @funcion_bp.route('/funciones', methods=['POST'])
 @token_required_admin
