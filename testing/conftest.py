@@ -2,14 +2,14 @@ import pytest
 from app import create_app
 from app.connection import db
 from sqlalchemy.sql import text
-from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Promocion
+from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Configuracion
 
 ''' Configuracion de base de datos para pruebas '''
 @pytest.fixture(scope='function')
 def client():
     app = create_app('testing')
 
-''' Creamos las tablas y algunos registros necesarios '''
+# Crreamos las tablas y algunos registros necesarios
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -28,16 +28,26 @@ def client():
             for clasificacion in clasificaciones_requeridas:
                 if clasificacion not in codigos_existentes:
                     db.session.add(Clasificacion(codigo=clasificacion))
+                    
+                    
+            configuraciones_requeridas = [
+                {'clave': 'precio_entrada', 'valor': '100.00'},
+            ]
+            
+            claves_existentes = {config.clave for config in Configuracion.query.all()}
+            for config in configuraciones_requeridas:
+                if config['clave'] not in claves_existentes:
+                    db.session.add(Configuracion(clave=config['clave'], valor=config['valor']))
 
             db.session.commit()
         yield client
         
-''' Eliminamos los registros y reiniciamos los ID al final de la prueba, respetando las dependencias '''
+# Eliminamos los registros y reiniciamos los ID al final de la prueba, respetando las dependencias
     with app.app_context():
 
         db.session.execute(text('TRUNCATE TABLE reseña RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE entrada RESTART IDENTITY CASCADE;'))
-        db.session.execute(text('TRUNCATE TABLE transaccion RESTART IDENTITY CASCADE;'))
+        db.session.execute(text('TRUNCATE TABLE transaccion_entrada RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE usuario RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE funcion RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE pelicula RESTART IDENTITY CASCADE;'))
@@ -45,7 +55,6 @@ def client():
         db.session.execute(text('TRUNCATE TABLE clasificacion RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE sala RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE metodo_pago RESTART IDENTITY CASCADE;'))
-        db.session.execute(text('TRUNCATE TABLE promocion RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE producto RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE rol RESTART IDENTITY CASCADE;'))
         db.session.commit()
@@ -57,7 +66,7 @@ def usuario(client):
         'nombre': 'Juan',
         'apellido': 'Pérez',
         'correo_electronico': 'juan.perez@example.com',
-        'fecha_nacimiento': '1990-01-01',
+        'fecha_nacimiento': '02-02-1990',
         'contraseña': 'pas123',  
         'id_rol': 1
     }
@@ -66,7 +75,7 @@ def usuario(client):
         'nombre': 'Maria',
         'apellido': 'Gómez',
         'correo_electronico': 'maria.gomez@example.com',
-        'fecha_nacimiento': '1985-02-02',
+        'fecha_nacimiento': '02-02-1999',
         'contraseña': 'pas456',  
         'id_rol': 1
     }

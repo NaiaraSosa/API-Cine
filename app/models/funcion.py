@@ -9,7 +9,3 @@ class Funcion(db.Model):
     horario_fin = db.Column(db.DateTime, nullable=False)  
     asientos_disponibles = db.Column(db.Integer, nullable=False) 
     asientos_totales = db.Column(db.Integer, nullable=False)
-
-    # Relaciones
-    pelicula = db.relationship("Pelicula", backref=db.backref("funciones", lazy=True))
-    sala = db.relationship("Sala", backref=db.backref("funciones", lazy=True))

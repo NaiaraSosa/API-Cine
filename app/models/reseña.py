@@ -10,6 +10,3 @@ class Reseña(db.Model):
     comentario = db.Column(db.String(1000))
     fecha = db.Column(db.DateTime, default=datetime.utcnow) 
 
-    # Relaciones
-    usuario = db.relationship("Usuario", backref=db.backref("reseñas", lazy=True))
-    pelicula = db.relationship("Pelicula", backref=db.backref("reseñas", lazy=True))
