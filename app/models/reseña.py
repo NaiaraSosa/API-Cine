@@ -1,5 +1,6 @@
 from app.connection import db
 
+''' Tabla Reseña '''
 class Reseña(db.Model):
     __tablename__ = 'reseña'
     id = db.Column(db.Integer, primary_key=True)
@@ -7,7 +8,3 @@ class Reseña(db.Model):
     id_pelicula = db.Column(db.Integer, db.ForeignKey('pelicula.id'), nullable=False)
     calificacion = db.Column(db.Integer, nullable=False)
     comentario = db.Column(db.String(1000))
-
-    # Relaciones
-    usuario = db.relationship("Usuario", backref=db.backref("reseñas", lazy=True))
-    pelicula = db.relationship("Pelicula", backref=db.backref("reseñas", lazy=True))

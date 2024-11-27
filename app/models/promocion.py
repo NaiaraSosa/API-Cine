@@ -1,6 +1,7 @@
 from app.connection import db
 from datetime import datetime
 
+''' Tabla Promocion '''
 class Promocion(db.Model):
     __tablename__ = 'promocion'
     id = db.Column(db.Integer, primary_key=True)

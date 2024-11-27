@@ -1,5 +1,6 @@
 from app.connection import db
 
+''' Tabla Entrada '''
 class Entrada(db.Model):
     __tablename__ = 'entrada'
     id = db.Column(db.Integer, primary_key=True)

@@ -1,5 +1,6 @@
 from app.connection import db
 
+''' Tabla Funcion '''
 class Funcion(db.Model):
     __tablename__ = 'funcion'
     id = db.Column(db.Integer, primary_key=True)
@@ -9,6 +10,3 @@ class Funcion(db.Model):
     horario_fin = db.Column(db.DateTime, nullable=False)  
     asientos_disponibles = db.Column(db.Integer, nullable=False, default=0) 
 
-    # Relaciones
-    pelicula = db.relationship("Pelicula", backref=db.backref("funciones", lazy=True))
-    sala = db.relationship("Sala", backref=db.backref("funciones", lazy=True))

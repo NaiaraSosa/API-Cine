@@ -3,7 +3,7 @@ from app.connection import db
 from app.routes import register_blueprints
 import os
 
-'''Inicialización de la API'''
+''' Inicialización de la API '''
 def create_app(config_name=None):
     app = Flask(__name__)
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from app.connection import db
 
-
+''' Tabla Transaccion '''
 class Transaccion(db.Model):
     __tablename__ = 'transaccion'
     id = db.Column(db.Integer, primary_key=True)

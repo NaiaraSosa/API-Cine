@@ -8,17 +8,15 @@ from app.routes.usuario_routes import token_required, token_required_admin
 
 funcion_bp = Blueprint('funcion', __name__)
 
-
+''' Obtener funcion por ID '''
 @funcion_bp.route('/funciones/<int:id>', methods=['GET'])
 @token_required
 def obtener_funcion(id):
-    # Buscar la función por ID
     funcion = Funcion.query.get(id)
 
     if not funcion:
-        return jsonify({'error': 'La función no se encuentra en el catálogo'}), 404
+        return jsonify({'error': 'La funcion no se encuentra en el catalogo'}), 404
 
-    # Preparar los datos de la función
     funcion_data = {
         'id': funcion.id,
         'id_pelicula': funcion.id_pelicula,
@@ -30,6 +28,7 @@ def obtener_funcion(id):
 
     return jsonify(funcion_data), 200
 
+''' Agregar funcion '''
 @funcion_bp.route('/funciones', methods=['POST'])
 @token_required_admin
 def agregar_funcion():
@@ -40,28 +39,28 @@ def agregar_funcion():
     horario_fin = data.get('horario_fin')
     asientos_disponibles = data.get('asientos_disponibles')
 
-    # Validación de campos requeridos
+    ''' Validacion de campos requeridos '''
     if not (id_pelicula and id_sala and horario_inicio and horario_fin and asientos_disponibles is not None):
         return jsonify({"error": "Todos los campos son requeridos"}), 400
 
-    # Validación de relación con Pelicula y Sala
+    ''' Validación de relación con Pelicula y Sala '''
     pelicula = Pelicula.query.get(id_pelicula)
     sala = Sala.query.get(id_sala)
     if not pelicula:
-        return jsonify({"error": "La película no existe"}), 404
+        return jsonify({"error": "La pelicula no existe"}), 404
     if not sala:
         return jsonify({"error": "La sala no existe"}), 404
 
-    # Validación de horarios
+    ''' Validación de horarios '''
     try:
         horario_inicio_dt = datetime.fromisoformat(horario_inicio)
         horario_fin_dt = datetime.fromisoformat(horario_fin)
         if horario_fin_dt <= horario_inicio_dt:
-            return jsonify({"error": "El horario de fin debe ser después del horario de inicio"}), 400
+            return jsonify({"error": "El horario de fin debe ser despues del horario de inicio"}), 400
     except ValueError:
         return jsonify({"error": "Formato de fecha/hora inválido"}), 400
 
-    # Validación de conflictos de horario en la misma sala
+    ''' Validacion de sala en horarios superpuestos '''
     conflicto = Funcion.query.filter(
         Funcion.id_sala == id_sala,
         Funcion.horario_inicio < horario_fin,
@@ -69,8 +68,9 @@ def agregar_funcion():
     ).first()
 
     if conflicto:
-        return jsonify({"error": "Ya existe una función en esa sala que se solapa con el horario proporcionado"}), 409
+        return jsonify({"error": "Ya existe una funcion en esa sala que se solapa con el horario proporcionado"}), 409
 
+    ''' Validacion de asientos disponibles '''
     if asientos_disponibles < 0:
         return jsonify({"error": "Los asientos disponibles deben ser 0 o mayores"}), 400
 
@@ -87,46 +87,45 @@ def agregar_funcion():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Error al agregar la función: {str(e)}"}), 500
+        return jsonify({"error": f"Error al agregar la funcion: {str(e)}"}), 500
 
-    return jsonify({"message": "Función agregada exitosamente"}), 201
+    return jsonify({"message": "funcion agregada exitosamente"}), 201
 
+''' Eliminar funcion por ID '''
 @funcion_bp.route('/funciones/<int:id>', methods=['DELETE'])
 @token_required_admin
 def eliminar_funcion(id):
     funcion = Funcion.query.get(id)
 
     if not funcion:
-        return jsonify({'error': 'La función no se encuentra en el catálogo'}), 404
+        return jsonify({'error': 'La funcion no se encuentra en el catalogo'}), 404
 
     try:
         db.session.delete(funcion)
         db.session.commit()
-        return jsonify({"message": "Función eliminada exitosamente"}), 200
+        return jsonify({"message": "funcion eliminada exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Error al eliminar la función: {str(e)}"}), 500
-    
+        return jsonify({"error": f"Error al eliminar la funcion: {str(e)}"}), 500
+
+''' Editar funcion por ID '''
 @funcion_bp.route('/funciones/<int:id>', methods=['PUT'])
 @token_required_admin
 def editar_funcion(id):
     data = request.get_json()
 
-    # Buscar la función por ID
     funcion = Funcion.query.get(id)
     if not funcion:
-        return jsonify({'error': 'La función no se encuentra en el catálogo'}), 404
+        return jsonify({'error': 'La funcion no se encuentra en el catalogo'}), 404
 
-    # Obtener nuevos valores o mantener los existentes
     id_pelicula = data.get('id_pelicula', funcion.id_pelicula)
     id_sala = data.get('id_sala', funcion.id_sala)
     horario_inicio = data.get('horario_inicio', funcion.horario_inicio.isoformat() if funcion.horario_inicio else None)
     horario_fin = data.get('horario_fin', funcion.horario_fin.isoformat() if funcion.horario_fin else None)
     asientos_disponibles = data.get('asientos_disponibles', funcion.asientos_disponibles)
 
-    # Validar los datos proporcionados
     if not id_pelicula or not id_sala:
-        return jsonify({"error": "El ID de la película y la sala son requeridos"}), 400
+        return jsonify({"error": "El ID de la pelicula y la sala son requeridos"}), 400
 
     try:
         if horario_inicio:
@@ -136,22 +135,20 @@ def editar_funcion(id):
     except ValueError:
         return jsonify({"error": "Formato de fecha inválido"}), 400
 
-    # Validación de fechas (asegurarse de que el horario_fin sea posterior al horario_inicio)
     if horario_inicio and horario_fin and horario_fin <= horario_inicio:
         return jsonify({"error": "El horario de fin debe ser después del horario de inicio"}), 400
 
-    # Validación de conflictos de horario en la misma sala
+
     conflicto = Funcion.query.filter(
         Funcion.id_sala == id_sala,
         Funcion.horario_inicio < horario_fin,
         Funcion.horario_fin > horario_inicio,
-        Funcion.id != id  # Excluir la función actual
+        Funcion.id != id  
     ).first()
 
     if conflicto:
-        return jsonify({"error": "Ya existe una función en esa sala que se solapa con el horario proporcionado"}), 409
+        return jsonify({"error": "Ya existe una funcion en esa sala que se solapa con el horario proporcionado"}), 409
 
-    # Actualizar los campos
     funcion.id_pelicula = id_pelicula
     funcion.id_sala = id_sala
     funcion.horario_inicio = horario_inicio
@@ -160,11 +157,12 @@ def editar_funcion(id):
 
     try:
         db.session.commit()
-        return jsonify({"message": "Función modificada exitosamente"}), 200
+        return jsonify({"message": "funcion modificada exitosamente"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Error al modificar la función: {str(e)}"}), 500
+        return jsonify({"error": f"Error al modificar la funcion: {str(e)}"}), 500
     
+''' Obtener todas las funciones '''
 @funcion_bp.route('/funciones', methods=['GET'])
 @token_required
 def obtener_funciones():

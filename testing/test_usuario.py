@@ -2,9 +2,8 @@ import pytest
 from app.models.usuario import Usuario
 from app.models.rol import Rol
 
-''' Test para editar los datos de un usuario '''
+''' Test para editar usuario por ID '''
 def test_editar_usuario(client, token, usuario):
-
     usuario_creado, usuario_2 = usuario
     usuario_id = usuario_creado.id  
 
@@ -24,9 +23,8 @@ def test_editar_usuario(client, token, usuario):
     assert response.status_code == 200
     
     
-''' Test para obtener los datos de un usuario por su ID '''
+''' Test para obtener usuario por ID '''
 def test_obtener_usuario_por_id(client, token, usuario):
-    
     usuario_creado, usuario_1 = usuario
     usuario_id = usuario_1.id 
 
@@ -39,7 +37,6 @@ def test_obtener_usuario_por_id(client, token, usuario):
     
 '''Test para obtener todos los usuarios'''
 def test_obtener_usuarios(client, token):
-
     headers = {'Authorization': f'{token}'}
 
     response = client.get('/api/usuarios', headers=headers)
@@ -49,7 +46,6 @@ def test_obtener_usuarios(client, token):
     
 '''Test para eliminar un usuario por ID'''
 def test_eliminar_usuario(client, token, usuario):
-    
     usuario_creado, usuario_2 = usuario
     usuario_id = usuario_creado.id
 

@@ -7,6 +7,7 @@ from app.routes.usuario_routes import token_required, token_required_admin
 pelicula_bp = Blueprint('pelicula_bp', __name__)
 
 
+''' Agregar pelicula '''
 @pelicula_bp.route('/peliculas', methods=['POST'])
 @token_required_admin
 def agregar_pelicula():
@@ -21,11 +22,11 @@ def agregar_pelicula():
         return jsonify({"error": "Todos los campos son requeridos"}), 400
 
     if Pelicula.query.filter((Pelicula.titulo == titulo)).first():
-        return jsonify({"error": "La película ya se encuentra en el catálogo."}), 409
+        return jsonify({"error": "La pelicula ya se encuentra en el catalogo."}), 409
     
     clasificacion = Clasificacion.query.get(id_clasificacion)
     if not clasificacion:
-        return jsonify({"error": "Clasificación no válida"}), 400
+        return jsonify({"error": "Clasificacion no valida"}), 400
 
     nueva_pelicula = Pelicula(
         titulo = titulo,
@@ -40,17 +41,17 @@ def agregar_pelicula():
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Error al agregar la película: {str(e)}"}), 500
+        return jsonify({"error": f"Error al agregar la pelicula: {str(e)}"}), 500
 
-    return jsonify({"message": "Película agregada exitosamente"}), 201
+    return jsonify({"message": "Pelicula agregada exitosamente"}), 201
 
-
+''' Obtener pelicula por ID '''
 @pelicula_bp.route('/peliculas/<int:id>', methods=['GET'])
 @token_required
-def obtener_usuario(id):
+def obtener_pelicula(id):
     pelicula = Pelicula.query.get(id)  
     if not pelicula:
-        return jsonify({'error': 'La película no se encuentra en el catálogo'}), 404
+        return jsonify({'error': 'La pelicula no se encuentra en el catalogo'}), 404
 
     pelicula_data = {
         'id': pelicula.id,
@@ -64,7 +65,7 @@ def obtener_usuario(id):
     return jsonify(pelicula_data), 200
 
 
-
+''' Editar pelicula por ID '''
 @pelicula_bp.route('/peliculas/<int:id>', methods=['PUT'])
 @token_required_admin
 def editar_pelicula(id):
@@ -72,7 +73,7 @@ def editar_pelicula(id):
 
     pelicula = Pelicula.query.get(id)
     if not pelicula:
-        return jsonify({'error': 'La película no se encuentra en el catálogo'}), 404
+        return jsonify({'error': 'La pelicula no se encuentra en el catalogo'}), 404
 
     titulo = data.get('titulo', pelicula.titulo)
     director = data.get('director', pelicula.director)
@@ -83,7 +84,7 @@ def editar_pelicula(id):
     if id_clasificacion != pelicula.id_clasificacion:
         clasificacion = Clasificacion.query.get(id_clasificacion)
         if not clasificacion:
-            return jsonify({"error": "Clasificación no válida"}), 400
+            return jsonify({"error": "clasificacion no válida"}), 400
 
     pelicula.titulo = titulo
     pelicula.director = director
@@ -96,18 +97,18 @@ def editar_pelicula(id):
     return jsonify({"message": "Película modificada exitosamente"}), 200
 
 
-
+''' Obtener pelicula por ID '''
 @pelicula_bp.route('/peliculas/<int:id>', methods=['DELETE'])
 @token_required_admin
 def eliminar_pelicula(id):
     pelicula = Pelicula.query.get(id)
     if not pelicula:
-        return jsonify({'error': 'La película no se encuentra en el catálogo'}), 404
+        return jsonify({'error': 'La pelicula no se encuentra en el catalogo'}), 404
 
     db.session.delete(pelicula)
     db.session.commit()
 
-    return jsonify({"message": "Película eliminada exitosamente"}), 200
+    return jsonify({"message": "Pelicula eliminada exitosamente"}), 200
 
 @pelicula_bp.route('/peliculas', methods=['GET'])
 @token_required
@@ -116,7 +117,7 @@ def obtener_peliculas():
     peliculas = Pelicula.query.all()
 
     if not peliculas:
-        return jsonify({"message": "No hay películas disponibles"}), 200
+        return jsonify({"message": "No hay peliculas disponibles"}), 200
 
     peliculas_data = []
     for pelicula in peliculas:
