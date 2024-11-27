@@ -8,8 +8,8 @@ from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasi
 @pytest.fixture(scope='function')
 def client():
     app = create_app('testing')
-
-''' Creamos las tablas y algunos registros necesarios '''
+    
+    '''Creamos las tablas y algunos registros necesarios'''
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -32,7 +32,7 @@ def client():
             db.session.commit()
         yield client
         
-''' Eliminamos los registros y reiniciamos los ID al final de la prueba, respetando las dependencias '''
+    '''Eliminamos los registros y reiniciamos los ID al final de la prueba, respetando las dependencias'''
     with app.app_context():
 
         db.session.execute(text('TRUNCATE TABLE reseña RESTART IDENTITY CASCADE;'))

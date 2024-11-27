@@ -11,5 +11,5 @@ class Config:
     TOKEN_EXPIRATION_MINUTES = 30  
 
 class TestingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:22617@localhost/cine')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     TESTING = True
