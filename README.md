@@ -13,8 +13,8 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
 ## Instalación
 
 1. Clonar el repositorio
-   git clone https://github.com/usuario/API-Cine.git
-   cd API-Cine
+   `git clone https://github.com/usuario/API-Cine.git`
+   `cd API-Cine`
 
 2. Crear un entorno virtual (opcional pero recomendado)
    python -m venv .venv
