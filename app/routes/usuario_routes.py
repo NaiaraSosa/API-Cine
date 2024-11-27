@@ -193,6 +193,10 @@ def editar_usuario(id, id_usuario):
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
     
+    if usuario.id != id_usuario:
+        return jsonify({"error": "No podes editar un usuario que no es tuyo"}), 403
+    
+    
     # Actualizar los campos con los datos proporcionados o dejar los actuales
     nombre = data.get('nombre', usuario.nombre)
     apellido = data.get('apellido', usuario.apellido)
@@ -206,6 +210,8 @@ def editar_usuario(id, id_usuario):
         rol = Rol.query.get(id_rol)
         if not rol:
             return jsonify({"error": "Rol no válido"}), 400
+    
+        
 
     # Asignar los valores a las propiedades del usuario
     usuario.nombre = nombre
@@ -243,6 +249,9 @@ def eliminar_usuario(id, id_usuario):
     if not usuario:
         return jsonify({'error': 'El usuario no se encuentra registrado'}), 404
 
+    if usuario.id != id_usuario:
+        return jsonify({"error": "No podes eliminar un usuario que no es tuyo"}), 403
+    
     # Eliminar el usuario
     db.session.delete(usuario)
     db.session.commit()

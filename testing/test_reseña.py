@@ -15,10 +15,11 @@ def test_obtener_reseña(client, token, reseñas):
     assert response.status_code == 200
 
 ''' Prueba para obtener reseñas '''
-def test_obtener_reseñas(client, token, reseñas):
+def test_obtener_reseñas(client, token, reseñas, peliculas):
+    pelicula = peliculas[0]       
     headers = {'Authorization': f'{token}'}
 
-    response = client.get('/api/reseñas', headers=headers)
+    response = client.get(f'/api/reseñas/pelicula/{pelicula.id}', headers=headers)
 
     assert response.status_code == 200
 
