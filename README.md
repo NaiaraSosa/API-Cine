@@ -1,7 +1,7 @@
 # CINEPI
 
 ## Descripción
-CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ver películas, comprar entradas, gestionar sus perfiles y dejar reseñas. 
+CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ver películas, comprar entradas y productos, gestionar sus perfiles y dejar reseñas. 
 
 ## Requisitos
 - Python 3.8 o superior
