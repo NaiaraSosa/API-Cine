@@ -13,20 +13,22 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
 ## Instalación
 
 1. Clonar el repositorio
+   
    `git clone https://github.com/usuario/API-Cine.git`
+   
    `cd API-Cine`
 
-2. Crear un entorno virtual (opcional pero recomendado)
+3. Crear un entorno virtual (opcional pero recomendado)
    python -m venv .venv
    source .venv/bin/activate  # En Windows usa `.venv\Scripts\activate`
 
-3. Instalar dependencias
+4. Instalar dependencias
    pip install -r requirements.txt
 
-4. Configuración de la base de datos
+5. Configuración de la base de datos
    Asegurate de tener PostgreSQL instalado y configurado, y crear una base de datos con el nombre "cine".
 
-5. Configuración del entorno
+6. Configuración del entorno
    Crea un archivo .env en la raíz del proyecto y agrega las siguientes variables:
    DATABASE_URL = postgresql://usuario:contraseña@localhost/cine
    SECRET_KEY = tu_contraseña
@@ -34,7 +36,7 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
    MAIL_PASSWORD=contraseñ_mail
    MAIL_DEFAULT_SENDER=tu_mail@gmail.com
 
-6. Ejecutar la API localmente
+7. Ejecutar la API localmente
    flask run
    La API estará corriendo en http://127.0.0.1:5000/
 
