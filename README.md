@@ -47,6 +47,7 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
    MAIL_DEFAULT_SENDER=tu_mail@gmail.com
 
 11. Ejecutar la API localmente
+    
     `flask run`
     La API estará corriendo en `http://127.0.0.1:5000/`
 
