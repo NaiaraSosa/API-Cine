@@ -30,9 +30,9 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
    Crea un archivo .env en la raíz del proyecto y agrega las siguientes variables:
    DATABASE_URL = postgresql://usuario:contraseña@localhost/cine
    SECRET_KEY = tu_contraseña
-   MAIL_USERNAME=naiarabsosa31@gmail.com
-   MAIL_PASSWORD=PepePepe98
-   MAIL_DEFAULT_SENDER=naiarabsosa31@gmail.com
+   MAIL_USERNAME=tu_mail@gmail.com
+   MAIL_PASSWORD=contraseñ_mail
+   MAIL_DEFAULT_SENDER=tu_mail@gmail.com
 
 6. Ejecutar la API localmente
    flask run
