@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.connection import db
 from app.models.rol import Rol
-from app.routes.usuario_routes import token_required, token_required_admin
+from app.routes.usuario_routes import token_required_admin
 
 rol_bp = Blueprint('rol_bp', __name__)
 
@@ -19,16 +19,20 @@ def obtener_rol(id):
     }
     return jsonify(rol_data), 200
 
+
+
 '''Obtener todos los roles'''
 @rol_bp.route('/roles', methods=['GET'])
 @token_required_admin  
 def obtener_roles():
     roles = Rol.query.all()
     if not roles:
-        return jsonify({"message": "No hay roles disponibles"}), 200
+        return jsonify({"message": "No se encontraron roles en el catálogo"}), 404
 
     roles_data = [{'id': rol.id, 'nombre': rol.nombre} for rol in roles]
     return jsonify(roles_data), 200
+
+
 
 '''Agregar un nuevo rol'''
 @rol_bp.route('/roles', methods=['POST'])
@@ -50,9 +54,11 @@ def agregar_rol():
         db.session.rollback()
         return jsonify({"error": f"Error al agregar el rol: {str(e)}"}), 500
 
+
+
 '''Editar un rol'''
 @rol_bp.route('/roles/<int:id>', methods=['PUT'])
-@token_required_admin  # Protege este endpoint si es necesario
+@token_required_admin  
 def editar_rol(id):
     rol = Rol.query.get(id)
 
@@ -60,8 +66,10 @@ def editar_rol(id):
         return jsonify({'error': 'El rol no se encuentra en el catálogo'}), 404
 
     data = request.get_json()
-    nombre = data.get('nombre', rol.nombre)
+    nombre = data.get('nombre')
 
+    if not nombre:
+        return jsonify({'error': 'El nombre del rol es obligatorio'}), 400
 
     rol.nombre = nombre
 
@@ -72,9 +80,11 @@ def editar_rol(id):
         db.session.rollback()
         return jsonify({"error": f"Error al modificar el rol: {str(e)}"}), 500
 
+
+
 '''Eliminar un rol'''
 @rol_bp.route('/roles/<int:id>', methods=['DELETE'])
-@token_required_admin  # Protege este endpoint si es necesario
+@token_required_admin  
 def eliminar_rol(id):
     rol = Rol.query.get(id)
 
@@ -88,3 +98,4 @@ def eliminar_rol(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al eliminar el rol: {str(e)}"}), 500
+
