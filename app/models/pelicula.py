@@ -8,6 +8,3 @@ class Pelicula(db.Model):
     duracion = db.Column(db.Integer, nullable=False) 
     id_clasificacion = db.Column(db.Integer, db.ForeignKey('clasificacion.id'), nullable=False)
     sinopsis = db.Column(db.String(1000))  
-
-    # relaciones
-    #reseñas = db.relationship("Reseña", backref="pelicula", lazy=True)

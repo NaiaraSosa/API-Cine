@@ -4,7 +4,7 @@ from app.routes import register_blueprints
 import os
 
 '''Inicialización de la API'''
-def create_app(config_name=None):
+def create_app(config_name = None):  # Agregamos el parámetro config_name
     app = Flask(__name__)
 
     # Determina el nombre de la configuración según el entorno
@@ -27,4 +27,3 @@ def create_app(config_name=None):
             db.create_all()
 
     return app
-

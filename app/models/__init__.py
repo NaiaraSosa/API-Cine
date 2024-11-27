@@ -8,8 +8,8 @@ from .transaccion_entrada import TransaccionEntrada
 from .clasificacion import Clasificacion
 from .pelicula import Pelicula
 from .producto import Producto
-from .promocion import Promocion
 from .reseña import Reseña
+from .configuracion import Configuracion
 
 
-_all_ = ['MetodoPago', 'Usuario', 'Rol', 'Sala', 'Entrada', 'Funcion', 'Transaccion', 'Clasificacion', 'Producto', 'Pelicula' , 'Promocion', 'Reseña']
+_all_ = ['MetodoPago', 'Usuario', 'Rol', 'Sala', 'Entrada', 'Funcion', 'TransaccionEntrada', 'Clasificacion', 'Producto', 'Pelicula' , 'Reseña', 'Configuracion']
