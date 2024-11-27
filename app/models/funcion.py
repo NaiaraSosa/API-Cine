@@ -7,7 +7,8 @@ class Funcion(db.Model):
     id_sala = db.Column(db.Integer, db.ForeignKey('sala.id'), nullable=False)
     horario_inicio = db.Column(db.DateTime, nullable=False) 
     horario_fin = db.Column(db.DateTime, nullable=False)  
-    asientos_disponibles = db.Column(db.Integer, nullable=False, default=0) 
+    asientos_disponibles = db.Column(db.Integer, nullable=False) 
+    asientos_totales = db.Column(db.Integer, nullable=False)
 
     # Relaciones
     pelicula = db.relationship("Pelicula", backref=db.backref("funciones", lazy=True))

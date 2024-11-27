@@ -1,3 +1,4 @@
+from datetime import datetime
 from app.connection import db
 
 class Reseña(db.Model):
@@ -7,6 +8,7 @@ class Reseña(db.Model):
     id_pelicula = db.Column(db.Integer, db.ForeignKey('pelicula.id'), nullable=False)
     calificacion = db.Column(db.Integer, nullable=False)
     comentario = db.Column(db.String(1000))
+    fecha = db.Column(db.DateTime, default=datetime.utcnow) 
 
     # Relaciones
     usuario = db.relationship("Usuario", backref=db.backref("reseñas", lazy=True))

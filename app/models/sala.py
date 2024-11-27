@@ -6,6 +6,3 @@ class Sala(db.Model):
     nombre = db.Column(db.String(50), nullable=False)
     capacidad = db.Column(db.Integer, nullable=False) 
 
-
-    # relaciones
-    funciones = db.relationship("Funcion", backref="sala", lazy=True)
