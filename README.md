@@ -34,7 +34,7 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
 
 9. Configuración del entorno
     
-   Crea un archivo .env en la raíz del proyecto y agrega las siguientes variables:
+   Crea un archivo `.env` en la raíz del proyecto y agrega las siguientes variables:
    
    DATABASE_URL = postgresql://usuario:contraseña@localhost/cine
    
