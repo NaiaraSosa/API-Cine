@@ -12,7 +12,7 @@ entrada_bp = Blueprint('entrada_bp', __name__)
 
 
 '''Comprar entradas'''
-@entrada_bp.route('/entradas', methods=['POST'])
+@entrada_bp.route('/entradas/comprar', methods=['POST'])
 @token_required
 def comprar_entradas(id_usuario):
     data = request.get_json()

@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app.connection import db
+from app.models.detalle_trans_producto import DetalleTransaccionProducto
 from app.models.producto import Producto
+from app.models.transaccion_producto import TransaccionProductos
 from app.routes.usuario_routes import token_required, token_required_admin
 
 producto_bp = Blueprint('producto_bp', __name__)
@@ -128,5 +130,90 @@ def eliminar_producto(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al eliminar el producto: {str(e)}"}), 500
+    
+
+
+'''Comprar productos'''
+@producto_bp.route('/productos/comprar', methods=['POST'])
+@token_required
+def comprar_productos(id_usuario):
+    data = request.get_json()
+    productos = data.get('productos')
+    id_metodo_pago = data.get('id_metodo_pago')
+
+    # Validaciones y lógica principal siguen igual
+    if not productos or not id_metodo_pago:
+        return jsonify({"error": "Los productos y el método de pago son requeridos"}), 400
+
+    total = 0
+    detalles = []
+
+    # Validar cada prod y calcular subtotal
+    for item in productos:
+        id_producto = item.get('id_producto')
+        cantidad = item.get('cantidad')
+
+        if not id_producto or not cantidad or cantidad <= 0:
+            return jsonify({"error": f"Datos inválidos para el producto {id_producto}"}), 400
+        
+        producto = Producto.query.get(id_producto)
+        if not producto:
+            return jsonify({"error": f"El producto con ID {id_producto} no existe"}), 404
+        
+        subtotal = float(producto.precio) * cantidad
+        total += subtotal
+
+        # Crear un detalle de la transacción
+        detalle = DetalleTransaccionProducto(
+            id_producto=id_producto,
+            cantidad=cantidad,
+            subtotal=subtotal
+        )
+        detalles.append(detalle)   
+
+    # Crear la transacción principal
+    transaccion = TransaccionProductos(
+        id_usuario=id_usuario,
+        total=total,
+        id_metodo_pago=id_metodo_pago
+    )
+
+    db.session.add(transaccion)
+
+    try:
+        db.session.flush()  
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al crear la transacción: {str(e)}"}), 500
+
+    # Asociar detalles a la transacción
+    for detalle in detalles:
+        detalle.id_transaccion = transaccion.id
+        db.session.add(detalle)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al procesar la compra: {str(e)}"}), 500
+
+    return jsonify({
+        "message": "Compra realizada con éxito",
+        "transaccion": {
+            "id": transaccion.id,
+            "id_usuario": transaccion.id_usuario,
+            "total": float(transaccion.total),
+            "id_metodo_pago": transaccion.id_metodo_pago,
+            "fecha_compra": transaccion.fecha_compra,
+            "detalles": [
+                {
+                    "id_producto": detalle.id_producto,
+                    "cantidad": detalle.cantidad,
+                    "subtotal": float(detalle.subtotal)
+                } for detalle in detalles
+            ]
+        }
+    }), 201
+       
 
 
