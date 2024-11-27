@@ -10,7 +10,6 @@ def client():
     app = create_app('testing')
     
     '''Creamos las tablas y algunos registros necesarios'''
-
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
