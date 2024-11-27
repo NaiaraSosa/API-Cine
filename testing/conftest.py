@@ -2,7 +2,7 @@ import pytest
 from app import create_app
 from app.connection import db
 from sqlalchemy.sql import text
-from app.models import Rol, Usuario, Entrada, Funcion, Transaccion, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Promocion
+from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Promocion
 
 ''' Configuracion de base de datos para pruebas '''
 @pytest.fixture(scope='function')

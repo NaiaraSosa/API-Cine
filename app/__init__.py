@@ -5,13 +5,25 @@ from app.routes import register_blueprints
 '''Inicialización de la API'''
 def create_app():
     app = Flask(__name__)
-    app.config.from_object('app.config.Config') 
+
+    # Determina el nombre de la configuración según el entorno
+    if config_name is None:
+        config_name = os.getenv('FLASK_ENV', 'development')  # Usa 'development' si no se especifica
+
+    # Carga la configuración adecuada según el nombre del entorno
+    if config_name == 'testing':
+        app.config.from_object('app.config.TestingConfig')
+    else:
+        app.config.from_object('app.config.Config')
+
     db.init_app(app)
 
     register_blueprints(app)
-
-    with app.app_context():
-        db.create_all()  
+    
+    # Crear las tablas en la base de datos (solo para testing)
+    if config_name == 'testing':
+        with app.app_context():
+            db.create_all()
 
     return app
 
