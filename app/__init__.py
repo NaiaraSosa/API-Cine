@@ -4,8 +4,22 @@ from app.routes import register_blueprints
 import os
 import os
 
-'''Inicialización de la API'''
-def create_app(config_name = None):  # Agregamos el parámetro config_name
+def create_app(config_name = None): 
+    """
+    Crea e inicializa la aplicación Flask con la configuración adecuada.
+
+    Esta función actúa como una fábrica para la aplicación Flask, permitiendo 
+    la configuración dinámica según el entorno (desarrollo, pruebas, producción). 
+    Carga la configuración de base de datos y rutas, e inicializa la base de datos 
+    y los blueprints de la aplicación.
+
+    Parámetros:
+        config_name (str): Nombre de la configuración a usar (por ejemplo, 'development', 'testing', etc.). 
+                            Si no se especifica, se usa 'development' por defecto.
+
+    Retorna:
+        app (Flask): La instancia de la aplicación Flask configurada y lista para usarse.
+    """
     app = Flask(__name__)
 
     # Determina el nombre de la configuración según el entorno

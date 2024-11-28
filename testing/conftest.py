@@ -42,6 +42,7 @@ def client():
 
             db.session.commit()
         yield client
+
         
     '''Eliminamos los registros y reiniciamos los ID al final de la prueba, respetando las dependencias'''
     with app.app_context():
@@ -69,7 +70,7 @@ def usuario(client):
     data = {
         'nombre': 'Juan',
         'apellido': 'Pérez',
-        'correo_electronico': 'juan.perez@example.com',
+        'correo_electronico': 'juan.perez@gmail.com',
         'fecha_nacimiento': '02-02-1990',
         'contraseña': 'pas123',  
         'id_rol': 1
@@ -78,7 +79,7 @@ def usuario(client):
     data_1 = {
         'nombre': 'Maria',
         'apellido': 'Gómez',
-        'correo_electronico': 'maria.gomez@example.com',
+        'correo_electronico': 'maria.gomez@gmail.com',
         'fecha_nacimiento': '02-02-1999',
         'contraseña': 'pas456',  
         'id_rol': 1
