@@ -53,6 +53,14 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
     La API estará corriendo en `http://127.0.0.1:5000/`
 
 
+## Testing con `pytest`
+Para ejecutar las pruebas, usa los siguientes comandos:
+
+- Ejecutar pruebas: `pytest`
+- Ver cobertura de pruebas: `coverage run -m pytest && coverage report`
+
+
+
 
 
 
