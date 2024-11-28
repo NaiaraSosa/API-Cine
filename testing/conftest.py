@@ -102,7 +102,7 @@ def usuario(client):
 @pytest.fixture
 def token(client, usuario):
     login_data = {
-        'correo_electronico': 'juan.perez@example.com',
+        'correo_electronico': 'juan.perez@gmail.com',
         'contraseña': 'pas123'
     }
 
@@ -267,18 +267,14 @@ def funciones(client, token, peliculas, salas):
         'id_pelicula': pelicula1.id,
         'id_sala': sala1.id,
         'horario_inicio': '2024-12-01T18:00:00',
-        'horario_fin': '2024-12-01T20:00:00',
-        'asientos_disponibles': sala1.capacidad,
-        'asientos_totales': sala1.capacidad
+        'horario_fin': '2024-12-01T20:00:00'
     }
 
     data_2 = {
         'id_pelicula': pelicula2.id,
         'id_sala': sala2.id,
         'horario_inicio': '2024-12-02T15:00:00',
-        'horario_fin': '2024-12-02T17:00:00',
-        'asientos_disponibles': sala2.capacidad,
-        'asientos_totales': sala2.capacidad
+        'horario_fin': '2024-12-02T17:00:00'
     }
 
     response_1 = client.post('/api/funciones', json=data_1, headers=headers)

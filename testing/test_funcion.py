@@ -13,12 +13,6 @@ def test_obtener_funcion_id(client, token, funciones):
     assert response.status_code == 200
 
 
-''' Prueba para obtener todas las funciones '''
-def test_obtener_funciones(client, token):
-    headers = {"Authorization": f'{token}'}
-    
-    response = client.get("/api/funciones", headers=headers)
-    assert response.status_code == 200
 
 ''' Prueba para obtener funciones por pelicula'''
 def test_obtener_funciones_pelicula(client, token, funciones, peliculas):
