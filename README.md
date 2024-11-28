@@ -40,11 +40,6 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
    
    SECRET_KEY = tu_contraseña
    
-   MAIL_USERNAME=tu_mail@gmail.com
-   
-   MAIL_PASSWORD=contraseña_mail
-   
-   MAIL_DEFAULT_SENDER=tu_mail@gmail.com
 
 11. Ejecutar la API localmente
     
