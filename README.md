@@ -59,6 +59,10 @@ Para ejecutar las pruebas, usa los siguientes comandos:
 - Ejecutar pruebas: `pytest`
 - Ver cobertura de pruebas: `coverage run -m pytest && coverage report`
 
+## Notas adicionales
+- Este proyecto está en evolución, por lo que podrían agregarse más características.
+
+
 
 
 
