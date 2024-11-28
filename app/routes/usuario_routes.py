@@ -1,4 +1,14 @@
-from flask import request, jsonify, session, Blueprint
+"""
+Archivo: usuario_routes.py
+Descripción: Este archivo contiene las rutas relacionadas con los usuarios en la aplicación. 
+Incluye operaciones para crear, obtener y autenticar usuarios, así como para gestionar 
+tokens de autenticación JWT, y proporcionar acceso a la información de los usuarios de manera segura.
+
+Decoradores:
+- token_required: Verifica que el usuario esté autenticado mediante un token JWT.
+- token_required_admin: Verifica que el usuario tenga un rol de administrador.
+"""
+from flask import request, jsonify, Blueprint
 from psycopg2 import IntegrityError
 from app.connection import db
 from app.models.usuario import Usuario
@@ -11,6 +21,23 @@ usuario_bp = Blueprint('usuario_bp', __name__)
 
 @usuario_bp.route('/usuarios', methods=['POST'])
 def crear_usuario():
+    """
+    Crear un nuevo usuario.
+
+    Cuerpo de la solicitud:
+    - nombre (str): Nombre del usuario.
+    - apellido (str): Apellido del usuario.
+    - correo_electronico (str): Correo electrónico del usuario.
+    - fecha_nacimiento (str): Fecha de nacimiento del usuario (formato MM-DD-YYYY).
+    - contraseña (str): Contraseña del usuario (entre 6 y 8 caracteres).
+    - id_rol (int): ID del rol del usuario.
+
+    Retorna:
+    - 201: Mensaje de éxito si el usuario se registra correctamente.
+    - 400: Error si falta algún campo obligatorio o si hay un problema con los datos.
+    - 409: Error si el correo electrónico ya está registrado.
+    - 500: Error al registrar el usuario.
+    """
     data = request.get_json()
     nombre = data.get('nombre')
     apellido = data.get('apellido')
@@ -65,6 +92,16 @@ def crear_usuario():
 
 
 def generate_token(id_usuario, id_rol):
+    """
+    Generar un token JWT para un usuario.
+
+    Parámetros:
+    - id_usuario (int): ID del usuario.
+    - id_rol (int): ID del rol del usuario.
+
+    Retorna:
+    - token (str): Token JWT generado.
+    """
     expiration = datetime.utcnow() + timedelta(minutes=Config.TOKEN_EXPIRATION_MINUTES)
     token = jwt.encode({
         'id_usuario': id_usuario,
@@ -74,6 +111,14 @@ def generate_token(id_usuario, id_rol):
     return token
 
 def token_required(f):
+    """
+    Decorador que valida el token de autorización para acceso a rutas protegidas.
+
+    Retorna:
+    - 401: Si no se proporciona un token.
+    - 403: Si el token es inválido o ha expirado.
+    - Ejecuta la función original si el token es válido.
+    """
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
         if not token:
@@ -92,6 +137,14 @@ def token_required(f):
 
 
 def token_required_admin(f):
+    """
+    Decorador que valida el token de autorización y verifica que el usuario tenga rol de administrador.
+
+    Retorna:
+    - 401: Si no se proporciona un token.
+    - 403: Si el token es inválido, ha expirado o el rol del usuario no es administrador.
+    - Ejecuta la función original si el token es válido y el usuario es administrador.
+    """
     def decorated(*args, **kwargs):
         token = request.headers.get('Authorization')
         if not token:
@@ -111,6 +164,18 @@ def token_required_admin(f):
 
 @usuario_bp.route('/login', methods=['POST'])
 def login():
+    """
+    Iniciar sesión para un usuario y generar un token JWT.
+
+    Cuerpo de la solicitud:
+    - correo_electronico (str): Correo electrónico del usuario.
+    - contraseña (str): Contraseña del usuario.
+
+    Retorna:
+    - 200: Token JWT si las credenciales son correctas.
+    - 400: Error si falta algún campo obligatorio.
+    - 401: Error si las credenciales son inválidas.
+    """
     data = request.get_json()
     correo = data.get('correo_electronico', '').strip()
     contraseña = data.get('contraseña')
@@ -124,18 +189,22 @@ def login():
         return jsonify({"token": token}), 200
     else: 
         return jsonify({"error": "Credenciales inválidas"}), 401
-
-
-# Ruta para hacer logout NO PROBADA
-@usuario_bp.route('/logout', methods=['POST'])
-def logout():
-    return jsonify({"message": "Logout exitoso"}), 200
-
-
+    
 
 @usuario_bp.route('/usuarios/<int:id>', methods=['GET'])
 @token_required
 def obtener_usuario(id, id_usuario):
+    """
+    Obtener información de un usuario por su ID.
+
+    Parámetros:
+    - id (int): ID del usuario a obtener.
+
+    Retorna:
+    - 200: Detalles del usuario en formato JSON.
+    - 404: Error si el usuario no existe.
+    - 500: Error al obtener el usuario.
+    """
     try:
         usuario = Usuario.query.get(id)  
         if not usuario:
@@ -159,6 +228,14 @@ def obtener_usuario(id, id_usuario):
 @usuario_bp.route('/usuarios', methods=['GET'])
 @token_required
 def obtener_usuarios(id_usuario):
+    """
+    Obtener todos los usuarios registrados.
+
+    Retorna:
+    - 200: Lista de usuarios en formato JSON.
+    - 404: Error si no hay usuarios registrados.
+    - 500: Error al obtener los usuarios.
+    """
     try:
         usuarios = Usuario.query.all()  # Obtener todos los usuarios de la base de datos
         if not usuarios:
@@ -186,6 +263,28 @@ def obtener_usuarios(id_usuario):
 @usuario_bp.route('/usuarios/<int:id>', methods=['PUT'])
 @token_required
 def editar_usuario(id, id_usuario):  
+    """
+    Editar los detalles de un usuario existente.
+
+    Parámetros:
+    - id (int): ID del usuario a editar.
+    - id_usuario (int): ID del usuario que hace la solicitud (para asegurar que no edite a otro usuario).
+
+    Cuerpo de la solicitud:
+    - nombre (str, opcional): Nombre del usuario.
+    - apellido (str, opcional): Apellido del usuario.
+    - correo_electronico (str, opcional): Correo electrónico del usuario.
+    - fecha_nacimiento (str, opcional): Fecha de nacimiento del usuario (formato MM-DD-YYYY).
+    - contraseña (str, opcional): Nueva contraseña del usuario (entre 6 y 8 caracteres).
+    - id_rol (int, opcional): ID del rol del usuario.
+
+    Retorna:
+    - 200: Mensaje de éxito si el usuario es editado correctamente.
+    - 400: Error si los datos son inválidos o faltan.
+    - 403: Error si el usuario intenta editar a otro usuario.
+    - 404: Error si el usuario no se encuentra registrado.
+    - 500: Error al editar el usuario.
+    """
     data = request.get_json()
 
     # Buscar al usuario por ID
@@ -244,6 +343,19 @@ def editar_usuario(id, id_usuario):
 @usuario_bp.route('/usuarios/<int:id>', methods=['DELETE'])
 @token_required
 def eliminar_usuario(id, id_usuario):
+    """
+    Eliminar un usuario de la base de datos.
+
+    Parámetros:
+    - id (int): ID del usuario a eliminar.
+    - id_usuario (int): ID del usuario que realiza la solicitud (para asegurar que no elimine a otro usuario).
+
+    Retorna:
+    - 200: Mensaje de éxito si el usuario es eliminado correctamente.
+    - 403: Error si el usuario intenta eliminar a otro usuario.
+    - 404: Error si el usuario no se encuentra registrado.
+    - 500: Error al eliminar el usuario.
+    """
     # Buscar al usuario por ID
     usuario = Usuario.query.get(id)
     if not usuario:

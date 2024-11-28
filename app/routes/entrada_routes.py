@@ -1,4 +1,10 @@
-from flask import request, jsonify, session, Blueprint
+"""
+Archivo: entrada_routes.py
+Descripción: Este archivo contiene las rutas relacionadas con la compra y gestión del historial de entradas.
+Incluye operaciones para comprar entradas y consultar el historial de compras de un usuario.
+"""
+
+from flask import request, jsonify, Blueprint
 from app.connection import db
 from app.models.entrada import Entrada
 from app.models.transaccion_entrada import TransaccionEntrada
@@ -10,11 +16,24 @@ from app.routes.usuario_routes import token_required
 
 entrada_bp = Blueprint('entrada_bp', __name__)
 
-
-'''Comprar entradas'''
 @entrada_bp.route('/entradas/comprar', methods=['POST'])
 @token_required
 def comprar_entradas(id_usuario):
+    """
+    Comprar entradas para una función.
+
+    Cuerpo de la solicitud (JSON):
+    - id_funcion (int): ID de la función para la que se quieren comprar las entradas.
+    - cantidad (int): Número de entradas a comprar.
+    - id_metodo_pago (int): ID del método de pago a utilizar.
+
+    Retorna:
+    - 201: Detalles de la transacción y las entradas compradas en formato JSON.
+    - 400: Error si faltan campos requeridos o los datos no son válidos.
+    - 404: Error si la función o el método de pago no existen.
+    - 409: Error si no hay suficientes asientos disponibles.
+    - 500: Error al procesar la transacción o guardar los datos en la base de datos.
+    """
     data = request.get_json()
     id_funcion = data.get('id_funcion')
     cantidad = data.get('cantidad')
@@ -100,10 +119,20 @@ def comprar_entradas(id_usuario):
 @entrada_bp.route('/entradas', methods=['GET'])
 @token_required
 def obtener_historial_entradas(id_usuario):
+    """
+    Obtener el historial de compras de entradas de un usuario.
+
+    Parámetros:
+    - id_usuario (int): ID del usuario autenticado.
+
+    Retorna:
+    - 200: Lista de transacciones y entradas asociadas en formato JSON.
+    - 200: Mensaje indicando que no hay historial de compras si no existen registros.
+    """
     transacciones = TransaccionEntrada.query.filter_by(id_usuario=id_usuario).all()
 
     if not transacciones:
-        return jsonify({"message": "No tienes historial de compras."}), 200
+        return jsonify({"message": "No tienes historial de compras."}), 404
     
     historial = []
     for transaccion in transacciones:

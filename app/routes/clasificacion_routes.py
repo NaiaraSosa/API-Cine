@@ -1,3 +1,9 @@
+"""
+Archivo: clasificacion_routes.py
+Descripción: Este archivo contiene las rutas relacionadas con las clasificaciones en la aplicación.
+Incluye operaciones para obtener, crear, editar y eliminar clasificaciones.
+"""
+
 from flask import Blueprint, request, jsonify
 from app.connection import db
 from app.models.clasificacion import Clasificacion
@@ -5,10 +11,19 @@ from app.routes.usuario_routes import token_required_admin
 
 clasificacion_bp = Blueprint('clasificacion_bp', __name__)
 
-''' Obtener una clasificacion por ID '''
 @clasificacion_bp.route('/clasificaciones/<int:id>', methods=['GET'])
 @token_required_admin
 def obtener_clasificacion(id):
+    """
+    Obtener una clasificación por ID.
+
+    Parámetros:
+    - id (int): ID único de la clasificación.
+
+    Retorna:
+    - 200: Detalles de la clasificación en formato JSON.
+    - 404: Mensaje de error si no se encuentra la clasificación.
+    """
     clasificacion = Clasificacion.query.get(id)
     if not clasificacion:
         return jsonify({'error': 'La clasificación no se encuentra en el catálogo'}), 404
@@ -21,10 +36,17 @@ def obtener_clasificacion(id):
     return jsonify(clasificacion_data), 200
 
 
-''' Obtener todas las clasificaciones '''
+
 @clasificacion_bp.route('/clasificaciones', methods=['GET'])
 @token_required_admin
 def obtener_clasificaciones():
+    """
+    Obtener todas las clasificaciones.
+
+    Retorna:
+    - 200: Lista de clasificaciones en formato JSON.
+    - 404: Mensaje de error si no se encuentran clasificaciones.
+    """
     clasificaciones = Clasificacion.query.all()
     if not clasificaciones:
         return jsonify({"message": "No se encontraron clasificaciones"}), 404
@@ -33,10 +55,21 @@ def obtener_clasificaciones():
     return jsonify(clasificaciones_data), 200
 
 
-'''Agregar una clasificacion '''
+
 @clasificacion_bp.route('/clasificaciones', methods=['POST'])
 @token_required_admin
 def agregar_clasificacion():
+    """
+    Agregar una nueva clasificación.
+
+    Cuerpo de la solicitud:
+    - codigo (str): Código único de la clasificación.
+
+    Retorna:
+    - 201: Mensaje de éxito si se agrega la clasificación.
+    - 400: Error si no se proporciona el código o si ya existe.
+    - 500: Error al guardar la clasificación en la base de datos.
+    """
     data = request.get_json()
     codigo = data.get('codigo')
 
@@ -58,10 +91,24 @@ def agregar_clasificacion():
 
 
 
-''' Editar una clasificacion por ID '''
 @clasificacion_bp.route('/clasificaciones/<int:id>', methods=['PUT'])
 @token_required_admin
 def editar_clasificacion(id):
+    """
+    Editar una clasificación por ID.
+
+    Parámetros:
+    - id (int): ID único de la clasificación a modificar.
+
+    Cuerpo de la solicitud:
+    - codigo (str): Nuevo código para la clasificación.
+
+    Retorna:
+    - 200: Mensaje de éxito si se modifica la clasificación.
+    - 400: Error si no se proporciona el código o si ya existe.
+    - 404: Error si la clasificación no existe.
+    - 500: Error al guardar los cambios en la base de datos.
+    """
     clasificacion = Clasificacion.query.get(id)
 
     if not clasificacion:
@@ -69,7 +116,6 @@ def editar_clasificacion(id):
 
     data = request.get_json()
     codigo = data.get('codigo', clasificacion.codigo)
-
 
     if not codigo:
         return jsonify({'error': 'El código de la clasificación es requerido'}), 400
@@ -88,10 +134,20 @@ def editar_clasificacion(id):
 
 
 
-''' Eliminar una clasificacion por ID '''
 @clasificacion_bp.route('/clasificaciones/<int:id>', methods=['DELETE'])
 @token_required_admin
 def eliminar_clasificacion(id):
+    """
+    Eliminar una clasificación por ID.
+
+    Parámetros:
+    - id (int): ID único de la clasificación a eliminar.
+
+    Retorna:
+    - 200: Mensaje de éxito si se elimina la clasificación.
+    - 404: Error si la clasificación no existe.
+    - 500: Error al eliminar la clasificación de la base de datos.
+    """
     clasificacion = Clasificacion.query.get(id)
 
     if not clasificacion:
@@ -104,5 +160,3 @@ def eliminar_clasificacion(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Error al eliminar la clasificación: {str(e)}"}), 500
-
-

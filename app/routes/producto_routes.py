@@ -1,3 +1,8 @@
+"""
+Archivo: producto_routes.py
+Descripción: Este archivo contiene las rutas relacionadas con los productos en la aplicación.
+Incluye operaciones para obtener, crear, editar y eliminar productos, además de poder comprarlos.
+"""
 from flask import Blueprint, request, jsonify
 from app.connection import db
 from app.models.detalle_trans_producto import DetalleTransaccionProducto
@@ -7,10 +12,19 @@ from app.routes.usuario_routes import token_required, token_required_admin
 
 producto_bp = Blueprint('producto_bp', __name__)
 
-'''Obtener un producto por ID'''
 @producto_bp.route('/productos/<int:id>', methods=['GET'])
 @token_required
 def obtener_producto(id, id_usuario):
+    """
+    Obtener un producto por su ID.
+
+    Parámetros:
+    id (int): El ID del producto a obtener.
+
+    Retorna:
+    - 200: Detalles del producto en formato JSON.
+    - 404: Mensaje de error si no se encuentra el producto.
+    """
     producto = Producto.query.get(id)
     if not producto:
         return jsonify({'error': 'El producto no se encuentra en el catálogo'}), 404
@@ -24,10 +38,16 @@ def obtener_producto(id, id_usuario):
     return jsonify(producto_data), 200
 
 
-'''Obtener todos los productos'''
 @producto_bp.route('/productos', methods=['GET'])
 @token_required
 def obtener_productos(id_usuario):
+    """
+    Obtener todos los productos.
+
+    Retorna:
+    - 200: Lista de productos en formato JSON.
+    - 404: Mensaje de error si no se encuentran productos.
+    """
     productos = Producto.query.all()
     if not productos:
         return jsonify({"message": "No se encontraron productos en el catálogo"}), 404
@@ -41,6 +61,19 @@ def obtener_productos(id_usuario):
 @producto_bp.route('/productos', methods=['POST'])
 @token_required_admin
 def agregar_producto():
+    """
+    Agregar un nuevo producto.
+
+    Cuerpo de la solicitud:
+    - nombre (str): Nombre del producto.
+    - precio (float): Precio del producto.
+
+    Retorna:
+    - 201: Mensaje de éxito con los detalles del producto creado.
+    - 400: Error si los datos de entrada son inválidos.
+    - 409: Error si el producto ya existe en el catálogo.
+    - 500: Error si ocurre un problema al agregar el producto.
+    """
     data = request.get_json()
     nombre = data.get('nombre')
     precio = data.get('precio')
@@ -78,6 +111,22 @@ def agregar_producto():
 @producto_bp.route('/productos/<int:id>', methods=['PUT'])
 @token_required_admin
 def editar_producto(id):
+    """
+    Editar un producto existente.
+
+    Parámetros:
+    id (int): El ID del producto a editar.
+
+    Cuerpo de la solicitud:
+    - nombre (str): Nombre del producto.
+    - precio (float): Precio del producto.
+
+    Retorna:
+    - 200: Mensaje de éxito con los detalles del producto editado.
+    - 400: Error si el precio no es válido o el nombre es duplicado.
+    - 404: Error si no se encuentra el producto.
+    - 500: Error si ocurre un problema al editar el producto.
+    """
     producto = Producto.query.get(id)
 
     if not producto:
@@ -118,6 +167,17 @@ def editar_producto(id):
 @producto_bp.route('/productos/<int:id>', methods=['DELETE'])
 @token_required_admin
 def eliminar_producto(id):
+    """
+    Eliminar un producto del catálogo.
+
+    Parámetros:
+    id (int): El ID del producto a eliminar.
+
+    Retorna:
+    - 200: Mensaje de éxito indicando que el producto ha sido eliminado.
+    - 404: Error si no se encuentra el producto.
+    - 500: Error si ocurre un problema al eliminar el producto.
+    """
     producto = Producto.query.get(id)
 
     if not producto:
@@ -132,11 +192,21 @@ def eliminar_producto(id):
         return jsonify({"error": f"Error al eliminar el producto: {str(e)}"}), 500
     
 
-
-'''Comprar productos'''
 @producto_bp.route('/productos/comprar', methods=['POST'])
 @token_required
 def comprar_productos(id_usuario):
+    """
+    Realizar la compra de productos.
+
+    Parámetros:
+    - productos (list): Lista de productos con sus cantidades.
+    - id_metodo_pago (int): El ID del método de pago seleccionado.
+
+    Retorna:
+    - 201: Mensaje de éxito con los detalles de la transacción.
+    - 400: Error si los datos de entrada son inválidos.
+    - 500: Error si ocurre un problema al procesar la compra.
+    """
     data = request.get_json()
     productos = data.get('productos')
     id_metodo_pago = data.get('id_metodo_pago')
