@@ -2,6 +2,7 @@ from flask import Flask
 from app.connection import db
 from app.routes import register_blueprints
 import os
+import os
 
 '''Inicialización de la API'''
 def create_app(config_name = None):  # Agregamos el parámetro config_name

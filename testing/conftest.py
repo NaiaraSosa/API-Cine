@@ -3,7 +3,7 @@ from app import create_app
 from app.connection import db
 from datetime import datetime, timedelta
 from sqlalchemy.sql import text
-from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Configuracion
+from app.models import Rol, Usuario, Entrada, Funcion, TransaccionEntrada, Clasificacion, MetodoPago, Pelicula, Sala, Reseña, Producto, Configuracion, TransaccionProductos, DetalleTransaccionProducto
 
 ''' Configuracion de base de datos para pruebas '''
 @pytest.fixture(scope='function')
@@ -11,7 +11,6 @@ def client():
     app = create_app('testing')
     
     '''Creamos las tablas y algunos registros necesarios'''
-
     with app.test_client() as client:
         with app.app_context():
             db.create_all()
@@ -48,17 +47,20 @@ def client():
     with app.app_context():
 
         db.session.execute(text('TRUNCATE TABLE reseña RESTART IDENTITY CASCADE;'))
-        db.session.execute(text('TRUNCATE TABLE entrada RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE transaccion_entrada RESTART IDENTITY CASCADE;'))
+        db.session.execute(text('TRUNCATE TABLE entrada RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE usuario RESTART IDENTITY CASCADE;'))
+        db.session.execute(text('TRUNCATE TABLE metodo_pago RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE funcion RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE pelicula RESTART IDENTITY CASCADE;'))
+        db.session.execute(text('TRUNCATE TABLE transaccion_productos RESTART IDENTITY CASCADE;'))
         db.session.commit()     
+        db.session.execute(text('TRUNCATE TABLE detalle_transaccion_producto RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE clasificacion RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE sala RESTART IDENTITY CASCADE;'))
-        db.session.execute(text('TRUNCATE TABLE metodo_pago RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE producto RESTART IDENTITY CASCADE;'))
         db.session.execute(text('TRUNCATE TABLE rol RESTART IDENTITY CASCADE;'))
+
         db.session.commit()
     
 ''' Fixture para crear usuarios  '''        
@@ -164,116 +166,193 @@ def metodos_pago(client, token):
     metodo_pago_1 = MetodoPago.query.filter_by(tipo=data_1['tipo']).first()
     metodo_pago_2 = MetodoPago.query.filter_by(tipo=data_2['tipo']).first()
 
-    assert metodo_pago_1 is not None
-    assert metodo_pago_2 is not None
     
     return metodo_pago_1, metodo_pago_2
 
 ''' Fixture para crear peliculas '''
 @pytest.fixture
 def peliculas(client, token, clasificacion):
-    pelicula1 = Pelicula(
-        titulo="Pelicula 1", 
-        director="Director 1", 
-        duracion=120, 
-        id_clasificacion=clasificacion.id,  
-        sinopsis="Sinopsis de la pelicula 1"
-    )
+    headers = {'Authorization': f'{token}'}
+
+    data_1 = {
+        'titulo': 'Pelicula 1', 
+        'director': 'Director 1', 
+        'duracion': 120, 
+        'id_clasificacion': clasificacion.id,  
+        'sinopsis': 'Sinopsis de la pelicula 1'
+    }
     
-    pelicula2 = Pelicula(
-        titulo="Pelicula 2", 
-        director="Director 2", 
-        duracion=110, 
-        id_clasificacion=clasificacion.id, 
-        sinopsis="Sinopsis de la pelicula 2"
-    )
+    data_2 = {
+        'titulo': 'Pelicula 2', 
+        'director': 'Director 2', 
+        'duracion': 110, 
+        'id_clasificacion': clasificacion.id, 
+        'sinopsis': 'Sinopsis de la pelicula 2'
+    }
 
-    db.session.add(pelicula1)
-    db.session.add(pelicula2)
-    db.session.commit()
+    response_1 = client.post('/api/peliculas', json=data_1, headers=headers)
+    response_2 = client.post('/api/peliculas', json=data_2, headers=headers)
 
-    return [pelicula1, pelicula2]
+    assert response_1.status_code == 201
+    assert response_2.status_code == 201
+
+    pelicula_1 = Pelicula.query.filter_by(titulo=data_1['titulo']).first()
+    pelicula_2 = Pelicula.query.filter_by(titulo=data_2['titulo']).first()
+
+
+
+    return [pelicula_1, pelicula_2]
 
 ''' Fixture para crear salas '''
 @pytest.fixture
 def salas(client, token):
-    sala1 = Sala(
-        nombre="Sala 1", 
-        capacidad=100
-    )
-    sala2 = Sala(
-        nombre="Sala 2", 
-        capacidad=150
-    )
+    headers = {'Authorization': f'{token}'}
 
-    db.session.add(sala1)
-    db.session.add(sala2)
-    db.session.commit()
+    data_1 = {'nombre': 'Sala 1', 'capacidad': 100}
+    data_2 = {'nombre': 'Sala 2', 'capacidad': 150}
 
-    return [sala1, sala2]
+    response_1 = client.post('/api/salas', json=data_1, headers=headers)
+    response_2 = client.post('/api/salas', json=data_2, headers=headers)
+
+    assert response_1.status_code == 201
+    assert response_2.status_code == 201
+
+    sala_1 = Sala.query.filter_by(nombre=data_1['nombre']).first()
+    sala_2 = Sala.query.filter_by(nombre=data_2['nombre']).first()
+
+    return [sala_1, sala_2]
 
 ''' Fixture para crear reseñas '''
 @pytest.fixture
 def reseñas(client, token, peliculas, usuario):
+    headers = {'Authorization': f'{token}'}
     usuario_creado, usuario_1 = usuario
     pelicula1, pelicula2 = peliculas
 
-    reseña1 = Reseña(
-        id_usuario=usuario_creado.id,
-        id_pelicula=pelicula1.id,
-        calificacion=4,
-        comentario="Buena pelicula, me gusto mucho."
-    )
+    data_1 = {
+        'id_usuario': usuario_creado.id,
+        'id_pelicula': pelicula1.id,
+        'calificacion': 4,
+        'comentario': "Buena pelicula, me gusto mucho."
+    }
     
-    reseña2 = Reseña(
-        id_usuario=usuario_1.id,
-        id_pelicula=pelicula2.id,
-        calificacion=3,
-        comentario="La pelicula estuvo bien, pero esperaba mas."
-    )
+    data_2 = {
+        'id_usuario': usuario_1.id,
+        'id_pelicula': pelicula2.id,
+        'calificacion': 3,
+        'comentario': "La pelicula estuvo bien, pero esperaba mas."
+    }
 
-    db.session.add(reseña1)
-    db.session.add(reseña2)
-    db.session.commit()  
+    response_1 = client.post('/api/reseñas', json=data_1, headers=headers)
+    response_2 = client.post('/api/reseñas', json=data_2, headers=headers)
 
-    assert reseña1.id is not None
-    assert reseña2.id is not None
+    assert response_1.status_code == 201
+    assert response_2.status_code == 201
 
-    return [reseña1, reseña2]
+    reseña_1 = Reseña.query.filter_by(id_usuario=usuario_creado.id).first()
+    reseña_2 = Reseña.query.filter_by(id_usuario=usuario_1.id).first()
+
+
+    return [reseña_1, reseña_2]
 
 ''' Fixture para crear funciones '''
 @pytest.fixture
 def funciones(client, token, peliculas, salas):
+    headers = {'Authorization': f'{token}'}
     pelicula1, pelicula2 = peliculas
     sala1, sala2 = salas
 
-    funcion1 = Funcion(
-        id_pelicula=pelicula1.id,
-        id_sala=sala1.id,
-        horario_inicio=datetime(2024, 12, 1, 18, 0),
-        horario_fin=datetime(2024, 12, 1, 20, 0),
-        asientos_disponibles=sala1.capacidad,
-        asientos_totales=sala1.capacidad
-    )
+    data_1 = {
+        'id_pelicula': pelicula1.id,
+        'id_sala': sala1.id,
+        'horario_inicio': '2024-12-01T18:00:00',
+        'horario_fin': '2024-12-01T20:00:00',
+        'asientos_disponibles': sala1.capacidad,
+        'asientos_totales': sala1.capacidad
+    }
 
-    funcion2 = Funcion(
-        id_pelicula=pelicula2.id,
-        id_sala=sala2.id,
-        horario_inicio=datetime(2024, 12, 2, 15, 0),
-        horario_fin=datetime(2024, 12, 2, 17, 0),
-        asientos_disponibles=sala2.capacidad,
-        asientos_totales=sala2.capacidad
-    )
+    data_2 = {
+        'id_pelicula': pelicula2.id,
+        'id_sala': sala2.id,
+        'horario_inicio': '2024-12-02T15:00:00',
+        'horario_fin': '2024-12-02T17:00:00',
+        'asientos_disponibles': sala2.capacidad,
+        'asientos_totales': sala2.capacidad
+    }
 
-    db.session.add(funcion1)
-    db.session.add(funcion2)
-    db.session.commit()
+    response_1 = client.post('/api/funciones', json=data_1, headers=headers)
+    response_2 = client.post('/api/funciones', json=data_2, headers=headers)
 
-    assert funcion1.id is not None
-    assert funcion2.id is not None
+    assert response_1.status_code == 201
+    assert response_2.status_code == 201
 
-    return [funcion1, funcion2]
+    funcion_1 = Funcion.query.filter_by(id_pelicula=pelicula1.id).first()
+    funcion_2 = Funcion.query.filter_by(id_pelicula=pelicula2.id).first()
+
+    return [funcion_1, funcion_2]
+
+''' Fixture para crear productos '''
+@pytest.fixture
+def productos(client, token):
+    headers = {'Authorization': f'{token}'}
+
+    data_1 = {'nombre': 'Producto 1', 'precio': 100.00}
+    data_2 = {'nombre': 'Producto 2', 'precio': 150.50}
+
+    response_1 = client.post('/api/productos', json=data_1, headers=headers)
+    response_2 = client.post('/api/productos', json=data_2, headers=headers)
+
+    assert response_1.status_code == 201
+    assert response_2.status_code == 201
+
+    producto_1 = Producto.query.filter_by(nombre=data_1['nombre']).first()
+    producto_2 = Producto.query.filter_by(nombre=data_2['nombre']).first()
 
 
+    return [producto_1, producto_2]
+
+''' Fixture para crear transacciones de entrada '''
+@pytest.fixture
+def transacciones_entrada(client, usuario, metodos_pago, funciones):
+    usuario = usuario[0]
+    metodopago = metodos_pago[0]
+    funcion = funciones[0]
+
+    data = {
+        'id_usuario': usuario.id,
+        'id_funcion': funcion.id,
+        'cantidad_entradas': 2,
+        'total': 200.00,  # Total: 2 entradas * 100.00
+        'id_metodo_pago': metodopago.id,
+        'fecha': '2024-11-27T12:00:00'
+    }
+
+    response = client.post('/api/transacciones_entrada', json=data)
+
+    assert response.status_code == 201
+
+    transaccion = TransaccionEntrada.query.filter_by(id_usuario=usuario.id).first()
 
 
+    return transaccion
+
+''' Fixture para crear entradas '''
+@pytest.fixture
+def entradas(client, funciones, transacciones_entrada):
+    headers = {'Authorization': f'{token}'}
+    funcion1, funcion2 = funciones
+    transaccion = transacciones_entrada
+
+    data_1 = {'id_funcion': funcion1.id, 'id_transaccion': transaccion.id}
+    data_2 = {'id_funcion': funcion2.id, 'id_transaccion': transaccion.id}
+
+    response_1 = client.post('/api/entradas', json=data_1, headers=headers)
+    response_2 = client.post('/api/entradas', json=data_2, headers=headers)
+
+    assert response_1.status_code == 201
+    assert response_2.status_code == 201
+
+    entrada_1 = Entrada.query.filter_by(id_transaccion=transaccion.id).first()
+    entrada_2 = Entrada.query.filter_by(id_transaccion=transaccion.id).first()
+
+    return [entrada_1, entrada_2]
