@@ -39,9 +39,15 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
    DATABASE_URL = postgresql://usuario:contraseña@localhost/cine
    
    SECRET_KEY = tu_contraseña
-   
 
-11. Ejecutar la API localmente
+10. Configuración de Flask
+
+    Crea un archivo `.flaskenv` en la raíz del proyecto y agrega la siguiente variable:
+
+    FLASK_APP=app
+
+
+12. Ejecutar la API localmente
     
     `flask run`
     La API estará corriendo en `http://127.0.0.1:5000/`
