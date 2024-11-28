@@ -1,13 +1,54 @@
-# API-Cine
+# CINEPI
 
-Esta API está diseñada para administrar la cartelera de cines, permitiendo a los usuarios ver películas disponibles, horarios de funciones, comprar entradas y acumular puntos que pueden canjearse por descuentos en los productos del cine.
+## Descripción
+CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ver películas, comprar entradas y productos, gestionar sus perfiles y dejar reseñas. 
 
-## Funcionalidades principales
-- Ver listado de películas disponibles.
-- Buscar películas por nombre.
-- Información de las salas (capacidad y formato).
-- Compra de entradas con soporte para múltiples métodos de pago.
-- Confirmación de compra y envío de entradas por correo electrónico.
-- Acumulación de puntos en compra de productos del cine (entradas, comestibles, etc.)
-- Canje de puntos por descuentos.
-- Calificación y reseña sobre las películas, y consulta sobre las mismas.
+## Requisitos
+- Python 3.8 o superior
+- pip (gestor de paquetes)
+- PostgreSQL (Gestor de base de datos)
+- Flask (para el servidor web)
+- Flask-SQLAlchemy (ORM para la base de datos)
+
+## Instalación
+
+1. Clonar el repositorio
+   
+   `git clone https://github.com/usuario/API-Cine.git`
+   
+   `cd API-Cine`
+
+3. Crear un entorno virtual (opcional pero recomendado)
+   
+   `python -m venv .venv`
+   
+   source .venv/bin/activate  # En Windows usa `.venv\Scripts\activate`
+
+5. Instalar dependencias
+   
+   `pip install -r requirements.txt`
+
+7. Configuración de la base de datos
+   
+   Asegurate de tener PostgreSQL instalado y configurado, y crear una base de datos con el nombre "cine".
+
+9. Configuración del entorno
+    
+   Crea un archivo `.env` en la raíz del proyecto y agrega las siguientes variables:
+   
+   DATABASE_URL = postgresql://usuario:contraseña@localhost/cine
+   
+   SECRET_KEY = tu_contraseña
+   
+   MAIL_USERNAME=tu_mail@gmail.com
+   
+   MAIL_PASSWORD=contraseña_mail
+   
+   MAIL_DEFAULT_SENDER=tu_mail@gmail.com
+
+11. Ejecutar la API localmente
+    
+    `flask run`
+    La API estará corriendo en `http://127.0.0.1:5000/`
+
+

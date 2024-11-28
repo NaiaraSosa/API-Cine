@@ -284,6 +284,4 @@ def comprar_productos(id_usuario):
             ]
         }
     }), 201
-       
-
 
