@@ -1,3 +1,8 @@
+"""
+Archivo: configuracion_routes.py
+Descripción: Este archivo contiene las rutas relacionadas con la configuración general de la aplicación.
+Incluye operaciones para agregar, actualizar y obtener la configuración, como el precio de la entrada.
+"""
 from flask import Blueprint, request, jsonify
 from app.connection import db
 from app.models.configuracion import Configuracion
@@ -9,6 +14,18 @@ config_bp = Blueprint('config_bp', __name__)
 @config_bp.route('/configuracion', methods=['POST'])
 @token_required_admin
 def agregar_actualizar_configuracion():
+    """
+    Agregar o actualizar una configuración general.
+
+    Cuerpo de la solicitud:
+    - clave (str): Clave de la configuración.
+    - valor (str): Valor de la configuración.
+
+    Retorna:
+    - 201: Mensaje de éxito con los detalles de la configuración.
+    - 400: Error si no se proporciona la clave o el valor.
+    - 500: Error al guardar la configuración en la base de datos.
+    """
     data = request.get_json()
     clave = data.get('clave')
     valor = data.get('valor')
@@ -35,10 +52,16 @@ def agregar_actualizar_configuracion():
     
 
 
-'''Obtener el precio de la entrada'''
 @config_bp.route('/precio-entrada', methods=['GET'])
 @token_required_admin
 def obtener_precio_entrada():
+    """
+    Obtener el precio de la entrada configurado en la aplicación.
+
+    Retorna:
+    - 200: El precio de la entrada en formato JSON.
+    - 404: Mensaje de error si no se encuentra el precio configurado.
+    """
     precio_config = Configuracion.query.filter_by(clave='precio_entrada').first()
     if not precio_config:
         return jsonify({'error': 'Precio de entrada no configurado'}), 404
@@ -47,10 +70,20 @@ def obtener_precio_entrada():
 
 
 
-'''Actualizar el precio de la entrada'''
 @config_bp.route('/precio-entrada', methods=['PUT'])
 @token_required_admin
 def actualizar_precio_entrada():
+    """
+    Actualizar el precio de la entrada en la configuración de la aplicación.
+
+    Cuerpo de la solicitud:
+    - precio_entrada (float): Nuevo precio para la entrada.
+
+    Retorna:
+    - 200: Mensaje de éxito si se actualiza el precio de entrada.
+    - 400: Error si el precio no es un número válido o es negativo.
+    - 500: Error al actualizar el precio en la base de datos.
+    """
     data = request.get_json()
     nuevo_precio = data.get('precio_entrada')
 

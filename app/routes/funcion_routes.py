@@ -1,3 +1,9 @@
+"""
+Archivo: funcion_routes.py
+Descripción: Este archivo contiene las rutas relacionadas con las funciones de la aplicación.
+Incluye operaciones para obtener, crear, editar y eliminar funciones.
+"""
+
 from flask import Blueprint, request, jsonify
 from app.connection import db
 from app.models.funcion import Funcion
@@ -8,10 +14,20 @@ from app.routes.usuario_routes import token_required, token_required_admin
 
 funcion_bp = Blueprint('funcion', __name__)
 
-''' Obtener una función por ID '''
 @funcion_bp.route('/funciones/<int:id>', methods=['GET'])
 @token_required
 def obtener_funcion(id, id_usuario):
+    """
+    Obtener detalles de una función específica por su ID.
+
+    Parámetros de la ruta:
+    - id (int): ID de la función.
+
+    Retorna:
+    - 200: JSON con los detalles de la función si se encuentra.
+    - 404: Mensaje de error si no existe.
+    - 500: Mensaje de error si hay problemas con el servidor.
+    """
     try:
         funcion = Funcion.query.get(id)
 
@@ -34,13 +50,21 @@ def obtener_funcion(id, id_usuario):
         return jsonify({'error': f'Error al obtener la función: {str(e)}'}), 500
 
 
-''' Obtener todas las funciones '''
+
 @funcion_bp.route('/funciones', methods=['GET'])
 @token_required
 def obtener_funciones(id_usuario):
+    """
+    Obtener todas las funciones disponibles.
+
+    Retorna:
+    - 200: Lista de todas las funciones disponibles en formato JSON. 
+    - 400: Mensaje indicando que no hay funciones disponibles.
+    - 500: Error interno al procesar la solicitud.
+    """
     funciones = Funcion.query.all()
     if not funciones:
-        return jsonify({"message": "No hay funciones disponibles"}), 200
+        return jsonify({"message": "No hay funciones disponibles"}), 400
 
     funciones_data = []
     for funcion in funciones:
@@ -58,17 +82,31 @@ def obtener_funciones(id_usuario):
 
 
 
-'''Obtener todas las funciones de una película'''
 @funcion_bp.route('/funciones/pelicula/<int:id>', methods=['GET'])
 @token_required 
 def obtener_reseñas_pelicula(id, id_usuario):
+    """
+    Obtener todas las funciones de una película específica.
+
+    Parámetros de la ruta:
+    - id (int): ID de la película.
+
+    Requiere:
+    - Un token de usuario válido.
+
+    Retorna:
+    - 200: Lista de funciones asociadas a la película en formato JSON, incluyendo:
+    - 404: Error si la película no existe en la base de datos.
+    - 400: Mensaje indicando que no hay funciones disponibles para la película.
+    - 500: Error interno al procesar la solicitud.
+    """
     pelicula = Pelicula.query.get(id)
     if not pelicula:
         return jsonify({"error": "La película no existe"}), 404
     
     funciones = Funcion.query.filter_by(id_pelicula=id).all()
     if not funciones:
-        return jsonify({'message': 'No hay funciones para esta película'}), 200
+        return jsonify({'message': 'No hay funciones para esta película'}), 400
 
     funciones_data = []
     for funcion in funciones:
@@ -86,10 +124,25 @@ def obtener_reseñas_pelicula(id, id_usuario):
 
 
 
-''' Agregar una función '''
 @funcion_bp.route('/funciones', methods=['POST'])
 @token_required_admin
 def agregar_funcion():
+    """
+    Agregar una nueva función al sistema.
+
+    Cuerpo de la solicitud (JSON):
+    - id_pelicula (int): ID de la película para la función.
+    - id_sala (int): ID de la sala donde se llevará a cabo la función.
+    - horario_inicio (str): Fecha y hora de inicio de la función (formato ISO 8601).
+    - horario_fin (str): Fecha y hora de fin de la función (formato ISO 8601).
+
+    Retorna:
+    - 201: Datos de la función creada.
+    - 400: Error si faltan campos requeridos o los datos son inválidos.
+    - 404: Error si la película o sala no son válidas.
+    - 409: Error si ya existe una función con horario superpuesto en la misma sala.
+    - 500: Error interno al guardar la función en la base de datos.
+    """
     data = request.get_json()
     id_pelicula = data.get('id_pelicula')
     id_sala = data.get('id_sala')
@@ -165,10 +218,28 @@ def agregar_funcion():
     
 
 
-''' Editar una función por ID '''
 @funcion_bp.route('/funciones/<int:id>', methods=['PUT'])
 @token_required_admin
 def editar_funcion(id):
+    """
+    Editar una función existente.
+
+    Parámetros de la ruta:
+    - id (int): ID de la función a editar.
+
+    Cuerpo de la solicitud (JSON):
+    - id_pelicula (int, opcional): Nuevo ID de la película asociada.
+    - id_sala (int, opcional): Nuevo ID de la sala asociada.
+    - horario_inicio (str, opcional): Nueva fecha y hora de inicio (formato ISO 8601).
+    - horario_fin (str, opcional): Nueva fecha y hora de fin (formato ISO 8601).
+
+    Retorna:
+    - 200: Mensaje de éxito y detalles actualizados de la función.
+    - 400: Error si los datos proporcionados son inválidos.
+    - 404: Error si la función no existe.
+    - 409: Error si hay conflictos de horario con otra función en la misma sala.
+    - 500: Error interno al actualizar la función.
+    """
     data = request.get_json()
 
     # Buscar la función por ID
@@ -250,10 +321,20 @@ def editar_funcion(id):
     
 
 
-''' Eliminar una función por ID '''
 @funcion_bp.route('/funciones/<int:id>', methods=['DELETE'])
 @token_required_admin
 def eliminar_funcion(id):
+    """
+    Eliminar una función por su ID.
+
+    Parámetros de la ruta:
+    - id (int): ID de la función a eliminar.
+
+    Retorna:
+    - 200: Mensaje confirmando que la función fue eliminada exitosamente.
+    - 404: Error si la función no existe en la base de datos.
+    - 500: Error interno al eliminar la función de la base de datos.
+    """
     funcion = Funcion.query.get(id)
 
     if not funcion:
