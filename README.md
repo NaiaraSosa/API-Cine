@@ -62,6 +62,12 @@ Para ejecutar las pruebas, usa los siguientes comandos:
 ## Notas adicionales
 - Este proyecto está en evolución, por lo que podrían agregarse más características.
 
+## Autores
+- **Naiara Belén Sosa** - *Desarrollador principal* - [GitHub](https://github.com/NaiaraSosa)
+- **Camila Strika** - *Desarrollador principal* - [GitHub](https://github.com/camistrika)
+  
+
+
 
 
 
