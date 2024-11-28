@@ -56,18 +56,31 @@ CINEPI es una API diseñada para gestionar un cine, donde los usuarios pueden ve
 
 
 ├── app/
+
 │   ├── __init__.py            # Inicializa la aplicación Flask
+
 │   ├── connection.py          # Conexión a la base de datos
+
 │   ├── models.py              # Definición de los modelos de la base de datos
+
 │   ├── routes/                # Contiene las rutas de la API
+
 │   │   ├── usuario_routes.py  # Rutas relacionadas con los usuarios
+
 │   │   ├── pelicula_routes.py # Rutas relacionadas con las películas
+
 │   ├── config.py              # Configuración de la aplicación
+
 │   └── ...
+
 ├── .env                       # Archivo de configuración de variables de entorno
+
 ├── .flaskenv                  # Archivo de configuración de Flask
+
 ├── requirements.txt           # Dependencias del proyecto
+
 └── README.md                  # Documentación del proyecto
+
 
 
 
