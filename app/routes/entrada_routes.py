@@ -10,7 +10,7 @@ from app.routes.usuario_routes import token_required
 
 entrada_bp = Blueprint('entrada_bp', __name__)
 
-
+git push origin dev
 '''Comprar entradas'''
 @entrada_bp.route('/entradas/comprar', methods=['POST'])
 @token_required
